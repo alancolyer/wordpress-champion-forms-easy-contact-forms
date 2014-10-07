@@ -6,12 +6,12 @@
  * 	EasyContactFormsRoot class definition
  */
 
-/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
- * 
+ *
  */
 
 require_once 'easy-contact-forms-utils.php';
@@ -348,7 +348,7 @@ class EasyContactFormsRoot {
 				continue;
 			}
 			$objid = intval($form->oid);
-			$objtype = $form->t; 			
+			$objtype = $form->t;
 			$obj = EasyContactFormsClassLoader::getObject($objtype, TRUE, $objid);
 			if (!$obj) {
 				continue;
@@ -371,7 +371,7 @@ class EasyContactFormsRoot {
 
 		$viewname = $_amap['n'];
 
-		$_amap['m'] = 'view';		
+		$_amap['m'] = 'view';
 		$_amap = EasyContactFormsUtils::intercept($_amap);
 		if ($_amap == NULL) {
 			return EasyContactFormsIHTML::getNotLoggedInHTML();
@@ -505,7 +505,7 @@ class EasyContactFormsRoot {
 	 * @param boolean $unserialize
 	 * 	Unserialization flag
 	 * @param  $silent
-	 * 
+	 *
 	 *
 	 * @return arbitrary
 	 * 	Depends on the api call type
@@ -528,11 +528,11 @@ class EasyContactFormsRoot {
 		$body['request'] = serialize($args);
 		$body['site'] = get_bloginfo('url');
 
-		$request = array(
+		/*$request = array(
 			'body' => $body,
 			'user-agent' => 'WordPress/' . $wp_version . '; ' . get_bloginfo('url')
-		);
-		$raw_response = wp_remote_post('http://championforms.com/api.php', $request);
+		);*/
+		/*$raw_response = wp_remote_post('http://championforms.com/api.php', $request);
 		if (is_wp_error($raw_response) || ($raw_response['response']['code'] != 200)) {
 			if ($silent) {
 				return '';
@@ -552,8 +552,8 @@ class EasyContactFormsRoot {
 				$as->addMessage($msg);
 				return new WP_Error('remote_api_failed', $msg);
 			}
-		}
-		return $response;
+		}*/
+		return false; //$response;
 
 	}
 
