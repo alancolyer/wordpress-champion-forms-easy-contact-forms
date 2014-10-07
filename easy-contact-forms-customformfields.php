@@ -6,13 +6,12 @@
  * 	EasyContactFormsCustomFormFields class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
- * 
- * Please read the entire license text in the license.txt file
+ *
  */
 
 require_once 'easy-contact-forms-baseclass.php';
@@ -66,7 +65,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 */
 	function getDeleteStatements($id) {
 
-		$stmts[] = "DELETE FROM #wp__easycontactforms_customformfields WHERE id=$id;";
+		$stmts[] = "DELETE FROM #wp__easycontactforms_customformfields WHERE id='$id';";
 
 		return $stmts;
 
@@ -141,7 +140,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 			$field->set('FieldSet', $field->get('id'));
 		}
 		else {
-			$sf = $args->fid;
+			$sf = intval($args->fid);
 
 			$query = "SELECT
 				CustomFormFields.FieldSet AS FieldSet
@@ -173,7 +172,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function updateTemplate() {
 
@@ -188,27 +187,29 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	fillTemplate
 	 *
 	 * @param  $tpl
-	 * 
+	 *
 	 * @param  $typesettings
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function fillTemplate($tpl, $typesettings) {
 		$typexml = simplexml_load_string($typesettings);
+		if (!$typexml) return '';
 		$xml = simplexml_load_string($this->get('Settings'));
+		if (!$xml) return '';
 		$vars = array();
 		$vars['id'] = $this->get('id');
 		$vars['formid'] = $this->get('CustomForms');
 
 		foreach ($typexml->children() as $item) {
 			$name = $item->getName();
-			if ($name == 'Options') {
-				$value = $xml->$name;
+			if (!isset($xml->$name)) {
+				$value = ($name == 'Options') ? $typexml->$name : (string) $typexml->$name;
 			}
 			else {
-				$value = (string) $xml->$name;
+				$value = ($name == 'Options') ? $xml->$name : (string) $xml->$name;
 			}
 			$vars[$name] = $value;
 		}
@@ -227,33 +228,32 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getTMPFileName
 	 *
 	 * @param  $tpl
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getTMPFileName($tpl) {
 
 		$ds = DIRECTORY_SEPARATOR;
-		$dir = dirName(__FILE__) . $ds . 'forms' . $ds . 'tmp';
-		$pwd = EasyContactFormsSecurityManager::getServerPwd();
-		$filename = $dir . $ds . md5($tpl . $pwd. $this->get('Type')) . '.php';
-		if (!is_file($filename)) {
-			$typeobj = EasyContactFormsClassLoader::getObject('CustomFormFieldTypes', true, $this->get('Type'));
-			if ($tpl == 'sform') {
-				$propname = 'Form';
-			}
-			else if ($tpl == 'tpl') {
-				$propname = 'Template';
-			}
-			else {
-				$propname = 'Processor';
-			}
+		$dir1 = dirName(__FILE__) . '/forms/proc';
 
-			$tpl = $typeobj->get($propname);
-			EasyContactFormsUtils::createFolder($dir);
-			EasyContactFormsUtils::overwritefile($filename, $tpl);
+		$dir2 = str_replace('easy-contact-forms', 'easycontact_templates', plugin_dir_path(__FILE__)) . 'easy-contact-forms/forms/proc';
+
+		if ($tpl == 'sform') {
+			$fname = '_frm';
 		}
+		else if ($tpl == 'tpl') {
+			$fname = '_tpl';
+		}
+		else {
+			$fname = '_prc';
+		}
+		$filename = $dir1 . $ds . $fname . $this->get('Type') . '.php';
+		if (!is_file($filename)){
+			$filename = $dir2 . $ds . $fname . $this->get('Type') . '.php';
+		}
+
 		return $filename;
 
 	}
@@ -263,10 +263,10 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	deleteField
 	 *
 	 * @param  $map
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function deleteField($map) {
 
@@ -286,17 +286,51 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	}
 
 	/**
+	 * 	fixOrder
+	 *
+	 * @param  $map
+	 *
+	 *
+	 * @return
+	 *
+	 */
+	function fixOrder($map) {
+
+		$rparams = $this->getFilter($map);
+		$cf = intval($rparams['CustomForms']->values[0]);
+
+		$query = "SELECT
+				CustomFormFields.id
+			FROM
+				#wp__easycontactforms_customformfields AS CustomFormFields
+			WHERE
+				CustomFormFields.CustomForms='$cf'";
+
+		$fields = EasyContactFormsDB::getObjects($query);
+
+		foreach($fields as $fldid) {
+			$update = array();
+			$update['ListPosition'] = $fldid->id;
+			$this->update($update, $fldid->id);
+		}
+
+		$map['m'] = 'viewDetailed';
+		EasyContactFormsRoot::processEvent($map);
+
+	}
+
+	/**
 	 * 	get
 	 *
 	 * @param  $prop
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function get($prop) {
 
-		if ($prop == 'Processor' && !isset($this->fields->Processor)) {
+		if ($prop == 'Processor' && isset($this->fields->Processor)) {
 			$id = $this->get('Type');
 
 			$query = "SELECT
@@ -319,13 +353,13 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	Returns a list of available application fields
 	 *
 	 * @param  $type
-	 * 
+	 *
 	 * @param  $val
-	 * 
+	 *
 	 * @param  $id
-	 * 
+	 *
 	 * @param  $formid
-	 * 
+	 *
 	 *
 	 * @return string
 	 * 	the list
@@ -336,6 +370,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$map['email']['Users']['email'] = EasyContactFormsT::get('email');
 		$map['text']['Users']['Description'] = EasyContactFormsT::get('LastName');
 		$map['text']['Users']['Name'] = EasyContactFormsT::get('FirstName');
+		$map['text']['Users']['email'] = EasyContactFormsT::get('email');
 		$id = intval($id);
 		$formid = intval($formid);
 
@@ -386,16 +421,16 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getFieldsList
 	 *
 	 * @param  $view
-	 * 
+	 *
 	 * @param  $obj
-	 * 
+	 *
 	 * @param  $i
-	 * 
+	 *
 	 * @param  $map
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getFieldsList($view, $obj, $i, $map) {
 
@@ -419,12 +454,12 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getListItem
 	 *
 	 * @param  $obj
-	 * 
+	 *
 	 * @param  $headeritem
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getListItem($obj, $headeritem) {
 
@@ -467,7 +502,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	Returns a list of available field types
 	 *
 	 * @param  $map
-	 * 
+	 *
 	 *
 	 * @return string
 	 * 	the list
@@ -519,9 +554,11 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$toolbar = '<div class="buttons" id="ufo-field-type-buttons">';
 		ob_start();
 
-		EasyContactFormsCustomFormFields::getSettingsFormButton('ufo-form-t-introduction', EasyContactFormsT::get('CF_TutorialsIntroduction'), "onclick='window.open(\"http://easy-contact-forms.com/easy-contact-forms-introduction/\")'", 'icon_video_tutorial');
+		/*EasyContactFormsCustomFormFields::getSettingsFormButton('ufo-form-t-introduction', EasyContactFormsT::get('CF_TutorialsIntroduction'), "onclick='window.open(\"http://championforms.com/champion-forms-getting-started/view\")'", 'icon_video_tutorial');
 
-		EasyContactFormsCustomFormFields::getSettingsFormButton('ufo-form-t-field-settings', EasyContactFormsT::get('CF_TutorialsFieldSettings'), "onclick='window.open(\"http://easy-contact-forms.com/easy-contact-forms-field-settings/\")'", 'icon_video_tutorial');
+		EasyContactFormsCustomFormFields::getSettingsFormButton('ufo-form-t-styling', EasyContactFormsT::get('CF_TutorialsStyling'), "onclick='window.open(\"http://championforms.com/champion-forms-styling/view\")'", 'icon_video_tutorial');
+
+		EasyContactFormsCustomFormFields::getSettingsFormButton('ufo-form-t-client-data-collection', EasyContactFormsT::get('CF_TutorialsClientDataCollection'), "onclick='window.open(\"http://championforms.com/champion-forms-client-data-collection/view\")'", 'icon_video_tutorial');*/
 
 		$toolbar .= ob_get_contents();
 		ob_end_clean();
@@ -529,7 +566,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$toolbar .= '</div>';
 		$list = $toolbar . $list;
 
-		$list = '<link href="' . EASYCONTACTFORMS__engineWebAppDirectory . '/forms/fldcons/fldcons.css" rel="stylesheet" type="text/css"/>'  . $list ;
+		$list = '<link href="' . EASYCONTACTFORMS__engineWebAppDirectory . '/forms/fldcons/fldcons.1.4.9.css" rel="stylesheet" type="text/css"/>'  . $list ;
 
 		echo $list;
 
@@ -539,12 +576,12 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getSelectOptions
 	 *
 	 * @param  $id
-	 * 
+	 *
 	 * @param  $type
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getSelectOptions($id, $type) {
 
@@ -574,7 +611,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		foreach ($sort as $item) {
 			$option = $sort2[$item];
 			if ($type == 'select') {
-				$selected = $option->attributes()->default == 'true' ? ' selected' : '';
+				$selected = $option->attributes()->default == 'true' ? ' selected=\'selected\'' : '';
 				echo "<option value='$option'$selected>$option</option>";
 			}
 			if ($type == 'radiogroup') {
@@ -586,7 +623,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 				echo "<input style='width:16px;display:inline-block' type='radio'{$checked} id='id-{$id}-{$counter}'";
 				echo " name='id-{$id}' value='$option'";
 
-				echo " onclick='ufoForms.get(\"ufo-field-id-{$id}\").value=this.value;var c=ufoForms.els[\"ufo-field-id-{$id}\"];if(c){c.isvalid=true;ufoForms.changeView(true, c);ufoForms.validateForm(c.form);}'>";
+				echo " onclick='ufoForms.get(\"ufo-field-id-{$id}\").value=this.value;var c=ufoForms.els[\"ufo-field-id-{$id}\"];if(c){c.isvalid=true;ufoForms.changeView(true, c);ufoForms.validateForm(c.form);}'/>";
 
 				echo "<label style='display:inline-block' for='id-{$id}-{$counter}'>$option</label>";
 				echo "</div>";
@@ -603,10 +640,10 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getSettingsForm
 	 *
 	 * @param  $map
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getSettingsForm($map) {
 
@@ -615,11 +652,11 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$type = EasyContactFormsClassLoader::getObject('CustomFormFieldTypes', true, $field->get('Type'));
 
 		echo "<div class='buttons'>";
-		echo '<input type="hidden" class="ufo-form-value" id="oid" value="' . $id . '">';
+		echo '<input type="hidden" class="ufo-form-value" id="oid" value="' . $id . '"/>';
 
-		echo "<input type='hidden' value='var c = {};c.id = \"customformfields-btn\";AppMan.addSubmit(c);' class='ufo-eval'>";
+		echo "<input type='hidden' value='var c = {};c.id = \"customformfields-btn\";AppMan.addSubmit(c);' class='ufo-eval'/>";
 
-		$field->getSettingsFormButton('customformfields-btn', EasyContactFormsT::get('Apply'), "onclick='ufoCf.updateFieldData(this)'", 'icon_button_apply');
+		$field->getSettingsFormButton('customformfields-btn', EasyContactFormsT::get('Apply'), "onclick='ufoCf.updateFieldData(this)'", 'icon_button_save small-submit-button');
 
 		$field->getSettingsFormButton('ufo-form-expandall', EasyContactFormsT::get('CF_ExpandAll'), "onclick='ufoCf.expandAll(this, true)'", 'icon_cf_fieldset_expand');
 
@@ -637,6 +674,20 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		echo "<div style='clear:left'></div>";
 		echo "</div>";
 		echo $field->fillTemplate('sform', $type->get('Settings'));
+		?>
+		<div class='ufo-float-left ufo-customform-settings-savebutton-div'>
+			<?php echo EasyContactFormsIHTML::getButton(
+				array(
+					'id' => "ufo-customform-settings-savebutton",
+					'label' => EasyContactFormsT::get('Apply'),
+					'events' => "onclick='ufoCf.updateFieldData(this)'",
+					'iclass' => " class='icon_button_save ufo-id-link small-submit-button' ",
+					'bclass' => "button internalimage",
+				)
+			);?>
+		</div>
+		<?php
+		echo "<div style='clear:left'></div>";
 
 	}
 
@@ -644,16 +695,16 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getSettingsFormButton
 	 *
 	 * @param  $id
-	 * 
+	 *
 	 * @param  $title
-	 * 
+	 *
 	 * @param  $events
-	 * 
+	 *
 	 * @param  $class
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getSettingsFormButton($id, $title, $events, $class) {
 
@@ -661,9 +712,9 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		<div class='ufo-float-left'>
 			<?php echo EasyContactFormsIHTML::getButton(
 				array(
-					'id' => "$id",
+					'id' => $id,
 					'title' => $title,
-					'events' => " $events",
+					'events' => $events,
 					'iclass' => " class='$class ufo-id-link' ",
 					'bclass' => "ufo-imagebutton",
 				)
@@ -678,7 +729,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	Creates an option list
 	 *
 	 * @param  $xml
-	 * 
+	 *
 	 */
 	function getSettingsFormOptionList($xml) {
 
@@ -703,8 +754,8 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
     <?php foreach ($sort as $item) { ?>
     <?php $option = $sort2[$item]; ?>
       <li class='ufo-customform-fieldform-option-li <?php echo count($sort) == 1 ? 'ufo-fieldform-option-single-child' : '';?>'>
-        <input type='radio' id='ufo-fieldform-option-default-<?php echo $index;?>' value='<?php echo $option->attributes()->default == 'true' ? 'on' : ''; ?>' name='ufo-fieldform-option-default' title='<?php echo EasyContactFormsT::get('CF_Default');?>' tabindex='-1' <?php echo $option->attributes()->default == 'true' ? 'checked' : ''; ?> class='ufo-formvalue ufo-customform-option-default' onchange='ufoCf.unsetOptionValues();this.value=(this.checked)?"on":"off";'>
-        <input type='text' id='ufo-fieldform-option-li-<?php echo $index;?>' value='<?php echo $option;?>' class='ufo-formvalue textinput ufo-text ufo-fieldform-option-li'>
+        <input type='radio' id='ufo-fieldform-option-default-<?php echo $index;?>' value='<?php echo $option->attributes()->default == 'true' ? 'on' : ''; ?>' name='ufo-fieldform-option-default' title='<?php echo EasyContactFormsT::get('CF_Default');?>' tabindex='-1' <?php echo $option->attributes()->default == 'true' ? 'checked' : ''; ?> class='ufo-formvalue ufo-customform-option-default' onchange='ufoCf.unsetOptionValues();this.value=(this.checked)?"on":"off";'/>
+        <input type='text' id='ufo-fieldform-option-li-<?php echo $index;?>' value='<?php echo $option;?>' class='ufo-formvalue textinput ufo-text ufo-fieldform-option-li'/>
         <a id='ufo-fieldform-option-add-<?php echo $index;?>' title='<?php echo EasyContactFormsT::get('Add');?>' href='javascript:;' class='icon_button_add ufo-customform-option-add ufo-id-link' onclick='ufoCf.addOption(this.id);'></a>
         <a id='ufo-fieldform-option-delete-<?php echo (++$index);?>' title='<?php echo EasyContactFormsT::get('Delete');?>' class='icon_button_delete ufo-customform-option-delete ufo-id-link' onclick='ufoCf.deleteOption(this);'></a>
       </li>
@@ -720,7 +771,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	Moves a fieldset up and down
 	 *
 	 * @param  $map
-	 * 
+	 *
 	 */
 	function moveFieldSet($map) {
 
@@ -758,13 +809,10 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$form = $values[0];
 		$objid = intval($form->oid);
 		$data = $form->a;
-		if (sizeof((array) $data) == 0) {
-			return;
-		}
-		$field = EasyContactFormsClassLoader::getObject('CustomFormFields', true, $objid);
+		$fld = EasyContactFormsClassLoader::getObject('CustomFormFields', true, $objid);
 
 		$flds = array();
-		$type = $field->get('Type');
+		$type = $fld->get('Type');
 
 		$query = "SELECT
 				CustomFormFieldTypes.Settings
@@ -774,7 +822,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 				CustomFormFieldTypes.id=$type";
 
 		$typesettings = EasyContactFormsDB::getValue($query);
-		$fieldsettings = $field->get('Settings');
+		$fieldsettings = $fld->get('Settings');
 
 		$typexml = simplexml_load_string($typesettings);
 		$fldxml = new EasyContactFormsSimpleXML($fieldsettings);
@@ -783,7 +831,8 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 			$name = $item->getName();
 			if (isset($data->$name)) {
 				$value = $data->$name;
-				$value = str_replace('\'', '&#39;', $value);
+				$value = str_replace('&', '&amp;', $value);
+				$value = str_replace(chr(39), '&#39;', $value);
 				unset($fldxml->$name);
 				$fldxml->addCDATA($name, $value);
 				if ($name == 'Label') {
@@ -791,9 +840,8 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 				}
 			}
 			else {
-				$fldval = (string) $fldxml->$name;
 				$typeval = (string) $typexml->$name;
-				if (empty($fldval) && !empty($typeval)) {
+				if (!isset($fldxml->$name) && !empty($typeval)) {
 					$fldxml->$name = $typeval;
 				}
 			}
@@ -823,12 +871,14 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 			}
 		}
 
+		$phase = (object) array('index' => 2);
+		include $fld->getTMPFileName('proc');
 		$xml = $fldxml->asXML();
 
 		$flds['Settings'] = $xml;
 		parent::update($flds, $objid);
-		$field->set('Settings', $xml);
-		$field->updateTemplate();
+		$fld->set('Settings', $xml);
+		$fld->updateTemplate();
 
 	}
 
@@ -836,10 +886,10 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	updateOrder
 	 *
 	 * @param  $map
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function updateOrder($map) {
 
@@ -849,9 +899,11 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$fsid = explode('-', $fsid);
 		$fsid = $fsid[count($fsid)-1];
 		$fsid = intval($fsid);
+		if ($fsid == 0) {
+			return;
+		}
 		$input = explode('&', $input[1]);
 		$ids = array();
-		$ids[] = $fsid;
 		foreach ($input as $items) {
 			$items = explode('[]=', $items);
 			$id = $items[1];
@@ -878,6 +930,9 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 			$lp[$ids[$i]] = $objects[$i]->ListPosition;
 			$cf = $objects[$i]->CustomForms;
 		}
+		if (!isset($cf)) {
+			return;
+		}
 
 		$cff = EasyContactFormsClassLoader::getObject('CustomFormFields');
 		foreach ($lp as $id => $l) {
@@ -895,10 +950,10 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 	 * 	getFieldSetList
 	 *
 	 * @param  $params
-	 * 
+	 *
 	 *
 	 * @return
-	 * 
+	 *
 	 */
 	function getFieldSetList($params) {
 
@@ -929,8 +984,16 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 				$this->addCustomField($dispmap);
 				return NULL;
 
+			case 'copyField':
+				$this->copyField($dispmap);
+				return NULL;
+
 			case 'deleteField':
 				$this->deleteField($dispmap);
+				return NULL;
+
+			case 'fixOrder':
+				$this->fixOrder($dispmap);
 				return NULL;
 
 			case 'getSettingsForm':
@@ -1053,7 +1116,7 @@ class EasyContactFormsCustomFormFields extends EasyContactFormsBase {
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='CustomFormFields'><?php
 
-		require_once 'views/easy-contact-forms-customformfieldsdetailedmainview.php';
+		include 'views/easy-contact-forms-customformfieldsdetailedmainview.php';
 
 	}
 

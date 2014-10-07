@@ -6,13 +6,12 @@
  * 	EasyContactFormsIHTML class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -42,7 +41,7 @@ class EasyContactFormsIHTML {
 
 		$value = empty($value) ? '&nbsp;' : $value . $suffix;
 		$cut = isset($length) && strlen($value) > $length;
-		$value = ( $cut) ? substr($value, 0, $length) . '...' : $value;
+		$value = $cut ? substr($value, 0, $length) . '...' : $value;
 		echo $value;
 
 	}
@@ -226,11 +225,13 @@ class EasyContactFormsIHTML {
 		$bclass = isset($p->bclass) ? $p->bclass : 'button';
 		$iclass = isset($p->iclass) ? $p->iclass : ' class = "internalbutton" ';
 		$label = isset($p->label) ? $p->label : '';
-		$title = isset($p->title) ? ' title = "' . $p->title . '"' : '';
-		$events = isset($p->events) ? ' ' . $p->events : '';
+		$removeevents = isset($p->removeevents) && $p->removeevents === TRUE;
+		$title = isset($p->title) && !$removeevents ? ' title = "' . $p->title . '"' : '';
+		$events = isset($p->events) && !$removeevents ? ' ' . $p->events : '';
+		$disabledclass = $removeevents ? ' button-disabled' : '';
 		$id = isset($p->id) ? ' id = "' . $p->id . '"' : '';
 		?>
-		<span class = '<?php echo $bclass;?>'>
+		<span class = '<?php echo $bclass . $disabledclass;?>'>
 			<span>
 				<a<?php echo $id . $iclass . $title . $events;?>>
 					<?php echo $label;?>
@@ -446,7 +447,7 @@ class EasyContactFormsIHTML {
 					id = '<?php echo $elid;?>-Trigger'
 					href = 'javascript:;'
 					class = 'ufo-triggerbutton icon_trigger_open'
-					onclick = ''>&nbsp;&nbsp;&nbsp;
+					onclick = 'AppMan.AutoSuggest.redirect(this, "<?php echo $elid;?>", "<?php echo $p->type;?>");'>&nbsp;&nbsp;&nbsp;
 				</a>
 			</div>
 		<?php }
@@ -527,7 +528,7 @@ class EasyContactFormsIHTML {
 	/**
 	 * 	getNotLoggedInHTML
 	 *
-	 * 	prints a 'go home' string
+	 * 	prints a 'please log in' string
 	 *
 	 *
 	 * @return string

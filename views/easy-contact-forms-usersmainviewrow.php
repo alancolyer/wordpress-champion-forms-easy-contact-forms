@@ -8,13 +8,12 @@
  * 	@see EasyContactFormsLayout::getRows()
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -49,7 +48,7 @@ function getUsersMainViewRow($view, $obj, $i, $map) {
   ?>
   <tr class='ufohighlight <?php EasyContactFormsIHTML::getTrSwapClassName($i);?>'>
     <td class='firstcolumn'>
-      <input type='checkbox' id='<?php echo $view->idJoin('cb', $obj->getId());?>' value='off' class='ufo-deletecb' onchange='this.value=(this.checked)?"on":"off";'>
+      <input type='checkbox' id='<?php echo $view->idJoin('cb', $obj->getId());?>' value='off' class='ufo-deletecb' onchange='this.value=(this.checked)?"on":"off";'/>
     </td>
     <td>
       <?php echo $obj->get('id');?>
@@ -65,12 +64,10 @@ function getUsersMainViewRow($view, $obj, $i, $map) {
       </a>
     </td>
     <td>
-      <?php EasyContactFormsIHTML::echoDate($obj->get('Birthday'), EasyContactFormsT::get('DateFormat'), 0);?>
+      <?php EasyContactFormsIHTML::echoDate($obj->get('Birthday'), EasyContactFormsApplicationSettings::getInstance()->getDateFormat('PHP'), 0);?>
     </td>
     <td>
-      <a onclick='ufo.redirect({m:"show", oid:"<?php echo $obj->get('Role');?>", t:"Roles"})'>
-        <?php echo $obj->get('RoleDescription');?>
-      </a>
+      <?php echo $obj->get('RoleDescription');?>
     </td>
     <td>
       <?php echo $obj->CMSId;?>

@@ -7,13 +7,12 @@
  * 	@see EasyContactFormsUsers ::getManageMainView()
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 ?>
@@ -55,21 +54,21 @@
             <select id='<?php echo $obj->sId('id');?>' class='ufo-select ufo-filtersign'>
               <?php echo $obj->sList('general');?>
             </select>
-            <input type='text' id='id' class='textinput ufo-text ufo-filtervalue' style='width:130px'>
-          </div>
-          <div>
-            <label for='<?php echo $obj->sId('Name');?>'><?php echo EasyContactFormsT::get('FirstName');?></label>
-            <select id='<?php echo $obj->sId('Name');?>' class='ufo-select ufo-filtersign'>
-              <?php echo $obj->sList('string');?>
-            </select>
-            <input type='text' id='Name' class='textinput ufo-text ufo-filtervalue' style='width:130px'>
+            <input type='text' id='id' class='textinput ufo-text ufo-filtervalue' style='width:130px'/>
           </div>
           <div>
             <label for='<?php echo $obj->sId('Description');?>'><?php echo EasyContactFormsT::get('LastName');?></label>
             <select id='<?php echo $obj->sId('Description');?>' class='ufo-select ufo-filtersign'>
               <?php echo $obj->sList('string');?>
             </select>
-            <input type='text' id='Description' class='textinput ufo-text ufo-filtervalue' style='width:130px'>
+            <input type='text' id='Description' class='textinput ufo-text ufo-filtervalue' style='width:130px'/>
+          </div>
+          <div>
+            <label for='<?php echo $obj->sId('Name');?>'><?php echo EasyContactFormsT::get('FirstName');?></label>
+            <select id='<?php echo $obj->sId('Name');?>' class='ufo-select ufo-filtersign'>
+              <?php echo $obj->sList('string');?>
+            </select>
+            <input type='text' id='Name' class='textinput ufo-text ufo-filtervalue' style='width:130px'/>
           </div>
           <div>
             <label for='<?php echo $obj->sId('ContactType');?>'><?php echo EasyContactFormsT::get('ContactType');?></label>
@@ -78,15 +77,6 @@
             </select>
             <select id='ContactType' class='inputselect ufo-select ufo-filtervalue' style='width:130px'>
               <?php echo $obj->getListHTML(NULL, NULL, FALSE, 'ContactTypes');?>
-            </select>
-          </div>
-          <div>
-            <label for='<?php echo $obj->sId('Role');?>'><?php echo EasyContactFormsT::get('Role');?></label>
-            <select id='<?php echo $obj->sId('Role');?>' class='ufo-select ufo-filtersign'>
-              <?php echo $obj->sList('ref');?>
-            </select>
-            <select id='Role' class='inputselect ufo-select ufo-filtervalue' style='width:130px'>
-              <?php echo $obj->getRoleListHTML('Role', FALSE);?>
             </select>
           </div>
         </div>

@@ -6,13 +6,12 @@
  * 	EasyContactFormsMenu class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -67,14 +66,28 @@ class EasyContactFormsMenu {
       <div class='menupanel'>
         <ul class='ufoMenu'>
           <li>
+            <a href='javascript:ufo.mcall("t=DashBoardView&m=show")'>
+              <?php echo EasyContactFormsT::get('DashBoard');?>
+            </a>
+          </li>
+          <li>
             <a href='javascript:ufo.mcall("t=CustomForms&m=view")'>
               <?php echo EasyContactFormsT::get('CustomForms');?>
             </a>
           </li>
           <li>
             <a href='javascript:ufo.mcall("t=CustomFormsEntries&m=view")'>
-              <?php echo EasyContactFormsT::get('CustomFormsEntries');?>
+              <span>
+                 <?php echo EasyContactFormsT::get('CustomFormsEntries');?>
+              </span>
             </a>
+            <ul class='ufoMenui'>
+              <li>
+                 <a href='javascript:ufo.mcall("t=CustomFormEntryFiles&m=view")'>
+                   <?php echo EasyContactFormsT::get('CustomFormEntryFiles');?>
+                 </a>
+              </li>
+            </ul>
           </li>
           <li>
             <a href='javascript:ufo.mcall("t=Users&m=view")'>

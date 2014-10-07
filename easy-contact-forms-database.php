@@ -6,13 +6,12 @@
  * 	EasyContactFormsDB class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -140,9 +139,18 @@ class EasyContactFormsDB {
 
 		if (! is_null($filters) && isset($filters['fvalues'])){
 			foreach ($filters['fvalues'] as $key => $value){
-				$replacement = is_array($value) ?
-					"'" . implode("', '", $value) . "'" :
-					"'" . mysql_real_escape_string($value) . "'";
+				if (is_array($value)) {
+					if (!function_exists('ms_r_escape_s')) {
+						function ms_r_escape_s(&$item) {
+							$item = mysql_real_escape_string($item);
+						}
+					}
+					array_walk($value, 'ms_r_escape_s');
+					$replacement = "'" . implode("', '", $value) . "'";
+				}
+				else {
+					$replacement = "'" . mysql_real_escape_string($value) . "'";
+				}
 
 				$select = str_replace($key, $replacement, $select);
 			}
@@ -180,7 +188,7 @@ class EasyContactFormsDB {
 		$update = '';
 		$comma = '';
 		foreach($valuemap as $key => $value){
-			$update.= $comma.$key." = '" . mysql_real_escape_string($value) . "'";
+			$update .= $comma . $key . " = '" . mysql_real_escape_string($value) . "'";
 			$comma = ', ';
 		}
 
@@ -326,6 +334,9 @@ class EasyContactFormsDB {
 		if ($signid == '6') {
 			return 'NOT';
 		}
+		if ($signid == '12') {
+			return 'NOT IN';
+		}
 		return ' = ';
 
 	}
@@ -457,33 +468,6 @@ class EasyContactFormsDB {
 	}
 
 	/**
-	 * 	getStatusFilter
-	 *
-	 * 	sets a status filter, filtering out objects having a
-	 * 	last-by-list-position status
-	 *
-	 * @param string $type
-	 * 	a name a type to set a status filter for
-	 *
-	 * @return object
-	 * 	the predefined filter object
-	 */
-	function getStatusFilter($type) {
-
-		$query = 'SELECT id FROM ' . EasyContactFormsDB::getTableName($type) .
-			' ORDER BY ListPosition DESC';
-		$limit = (object) array('start' => 0, 'limit' => 1);
-		$result = EasyContactFormsDB::select($query, NULL, NULL, $limit);
-		if (count($result) == 0) {
-			return (object) (array('sign' => '10', 'values' => array(0)));
-		}
-		else {
-			return (object) (array('sign' => '9', 'values' => array($result[0]->id)));
-		}
-
-	}
-
-	/**
 	 * 	getMTMFilter
 	 *
 	 * 	peforms many-to-many table filterfing
@@ -526,7 +510,7 @@ class EasyContactFormsDB {
 			}
 			$filters['fnames'][] = $alias . '.id NOT IN (SELECT ' .
 				$obj->n . ' FROM ' . $tablename .
-				' WHERE ' . $obj->fld . ' = \'' . $objid . '\')';
+				" WHERE {$obj->fld} = '{$objid}')";
 		}
 
 		return $filters;
@@ -549,16 +533,18 @@ class EasyContactFormsDB {
 	 * 	object type
 	 * @param string $datatype
 	 * 	data type
+	 * @param string $defaultvalue
+	 * 	default value
 	 *
 	 * @return array
 	 * 	comparison statement
 	 */
-	function getSignFilter($filters, $rparams, $alias, $pttype, $datatype = NULL) {
+	function getSignFilter($filters, $rparams, $alias, $pttype, $datatype = NULL, $defaultvalue = NULL) {
 
-		if (!isset($rparams[$pttype]) || empty($rparams[$pttype])) {
+		$novalue = (!isset($rparams[$pttype]) || empty($rparams[$pttype])); 
+		if ($novalue) {
 			return $filters;
 		}
-
 		$value = $rparams[$pttype];
 		if (!isset($value->sign) || empty($value->sign)) {
 			return $filters;
@@ -571,7 +557,7 @@ class EasyContactFormsDB {
 
 		$sign = EasyContactFormsDB::getSign($sign);
 
-		return EasyContactFormsDB::getFilter($filters, $rparams, $alias, $pttype, $sign, $datatype);
+		return EasyContactFormsDB::getFilter($filters, $rparams, $alias, $pttype, $sign, $datatype, $defaultvalue);
 
 	}
 
@@ -593,14 +579,23 @@ class EasyContactFormsDB {
 	 * 	an operator to use when building the statement
 	 * @param string $datatype
 	 * 	data type
+	 * @param string $defaultvalue
+	 * 	default value
 	 *
 	 * @return array
 	 * 	comparison statement
 	 */
-	function getFilter($filters, $rparams, $alias, $pttype, $sign, $datatype = NULL) {
+	function getFilter($filters, $rparams, $alias, $pttype, $sign, $datatype = NULL, $defaultvalue = NULL) {
 
-		if (!isset($rparams[$pttype]) || empty($rparams[$pttype])) {
+		$novalue = (!isset($rparams[$pttype]) || empty($rparams[$pttype])) && is_null($defaultvalue); 
+		if ($novalue) {
 			return $filters;
+		}
+		if (isset($rparams[$pttype]) && !empty($rparams[$pttype])) {
+			$value = $rparams[$pttype];
+		}
+		else {
+			$value =$defaultvalue;
 		}
 		if (!isset($filters['fnames'])) {
 			$filters['fnames'] = array();
@@ -610,7 +605,6 @@ class EasyContactFormsDB {
 		$lalias = $alias . $pttype;
 		$falias = str_replace('.', '_', $lalias);
 
-		$value = $rparams[$pttype];
 		if ($sign == 'BETWEEN') {
 			$filters['fnames'][] = "$lalias BETWEEN :$falias1 AND :$falias2";
 			return $filters;
@@ -621,8 +615,8 @@ class EasyContactFormsDB {
 			return $filters;
 		}
 
-		if ($sign == 'IN') {
-			$filters['fnames'][] = "$lalias IN (:$falias)";
+		if ($sign == 'IN' || $sign == 'NOT IN') {
+			$filters['fnames'][] = "$lalias $sign (:$falias)";
 			$values = array();
 			foreach ($value->values as $vvalue) {
 				$values[] = EasyContactFormsUtils::convert($vvalue, $datatype, TRUE);

@@ -7,13 +7,12 @@
  * 	@see EasyContactFormsContactTypes ::getMainView()
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 
@@ -80,21 +79,21 @@ EasyContactFormsLayout::getFormHeader2Body();
             <select id='<?php echo $obj->sId('id');?>' class='ufo-select ufo-filtersign'>
               <?php echo $obj->sList('general');?>
             </select>
-            <input type='text' id='id' class='textinput ufo-text ufo-filtervalue' style='width:130px'>
+            <input type='text' id='id' class='textinput ufo-text ufo-filtervalue' style='width:130px'/>
           </div>
           <div>
             <label for='<?php echo $obj->sId('Description');?>'><?php echo EasyContactFormsT::get('Description');?></label>
             <select id='<?php echo $obj->sId('Description');?>' class='ufo-select ufo-filtersign'>
               <?php echo $obj->sList('string');?>
             </select>
-            <input type='text' id='Description' class='textinput ufo-text ufo-filtervalue' style='width:130px'>
+            <input type='text' id='Description' class='textinput ufo-text ufo-filtervalue' style='width:130px'/>
           </div>
           <div>
             <label for='<?php echo $obj->sId('Notes');?>'><?php echo EasyContactFormsT::get('Notes');?></label>
             <select id='<?php echo $obj->sId('Notes');?>' class='ufo-select ufo-filtersign'>
               <?php echo $obj->sList('string');?>
             </select>
-            <input type='text' id='Notes' class='textinput ufo-text ufo-filtervalue' style='width:130px'>
+            <input type='text' id='Notes' class='textinput ufo-text ufo-filtervalue' style='width:130px'/>
           </div>
         </div>
       </div>
@@ -105,7 +104,7 @@ EasyContactFormsLayout::getFormHeader2Body();
       <table class='vtable'>
         <tr>
           <th style='width:8px'>
-            <input type='checkbox' class='ufo-id-link' style='margin:0' onchange='ufo.checkAll(this)'>
+            <input type='checkbox' class='ufo-id-link' style='margin:0' onchange='ufo.checkAll(this)'/>
           </th>
           <th style='width:30px'>
             <?php EasyContactFormsIHTML::getColumnHeader(array('view' => $obj, 'field' => "id"));?>

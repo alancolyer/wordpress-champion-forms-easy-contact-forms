@@ -9,18 +9,20 @@
 .icon_preview{background-image: url(../images/preview_16.png) !important}
 .icon_button_save{background-image: url(../images/diskette_16.png) !important}
 .icon_button_copy{background-image: url(../images/copy_16.png) !important}
+.icon_reset{background-image: url(../images/reset.png) !important}
 .icon_cf_fieldset_collapse{background-image: url(../images/fieldset-exp-collapsed.png) !important}
 .icon_button_add{background-image: url(../images/add_16.png) !important}
 .icon_cf_fieldset_default{background-image: url(../images/fieldset-exp-default.png) !important}
 .icon_trigger_open{background-image: url(../images/minisites_16.png) !important}
 .icon_trigger_up{background-image: url(../images/up.png) !important}
-.icon_cf_field_delele{background-image: url(../images/field-delete.png) !important}
 .icon_cf_fieldset_up{background-image: url(../images/fieldset-up.png) !important}
+.icon_cf_field_delele{background-image: url(../images/field-delete.png) !important}
 .icon_scroller_last{background-image: url(../images/last.png) !important}
-.icon_scroller_next{background-image: url(../images/fast_forward.png) !important}
 .icon_button_unpin{background-image: url(../images/unpinned.png) !important}
+.icon_filter_close{background-image: url(../images/filter_close.png) !important}
 .icon_menu_help, .icon_video_tutorial{background-image: url(../images/help_16.png) !important}
 .icon_cf_remove_default_option{background-image: url(../images/option-remove-default.png) !important}
+.icon_scroller_next{background-image: url(../images/fast_forward_16.png) !important}
 .icon_button_back{background-image: url(../images/window_back.png) !important}
 .icon_cf_fieldset_expander_collapsed{background-image: url(../images/expander-collapsed.png) !important}
 .icon_cf_fieldset_expand{background-image: url(../images/fieldset-exp-expanded.png) !important}

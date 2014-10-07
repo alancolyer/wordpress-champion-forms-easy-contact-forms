@@ -5,180 +5,449 @@
  */
 
 function easycontactforms_install() {
-	global $wpdb;				
-	$sqls = array();
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_applicationsettings (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				TinyMCEConfig TEXT,
-				UseTinyMCE BOOLEAN,
-				ApplicationWidth INT(10),
-				ApplicationWidth2 INT(10),
-				DefaultStyle VARCHAR(50),
-				DefaultStyle2 VARCHAR(50),
-				SecretWord VARCHAR(50),
-				NotLoggenInText TEXT,
-				SendFrom VARCHAR(100),
-				PRIMARY KEY (id),
-				INDEX Description (Description));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_contacttypes (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				Notes TEXT,
-				PRIMARY KEY (id),
-				INDEX Description (Description));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformfields (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				Type INT(11) NOT NULL DEFAULT 0,
-				Settings TEXT,
-				Template TEXT,
-				ListPosition INT(10) NOT NULL DEFAULT 0,
-				CustomForms INT(11) NOT NULL DEFAULT 0,
-				FieldSet INT(10),
-				PRIMARY KEY (id),
-				INDEX FieldSet (FieldSet),
-				INDEX Description (Description),
-				INDEX CustomForms (CustomForms),
-				INDEX Type (Type),
-				INDEX ListPosition (ListPosition));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformfieldtypes (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				Form TEXT,
-				Template TEXT,
-				CssClass VARCHAR(100),
-				Settings TEXT,
-				Processor TEXT,
-				Signature TEXT,
-				ListPosition INT(10) NOT NULL DEFAULT 0,
-				ValueField BOOLEAN,
-				HelpLink TEXT,
-				PRIMARY KEY (id),
-				INDEX Description (Description),
-				INDEX ListPosition (ListPosition));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_customforms (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				NotificationSubject VARCHAR(200),
-				SendFrom VARCHAR(200),
-				SendConfirmation BOOLEAN,
-				ConfirmationSubject VARCHAR(200),
-				ConfirmationText TEXT,
-				Redirect BOOLEAN,
-				RedirectURL TEXT,
-				ShortCode VARCHAR(300),
-				Template BOOLEAN,
-				SubmissionSuccessText TEXT,
-				StyleSheet TEXT,
-				HTML TEXT,
-				SendFromAddress VARCHAR(200),
-				ShowSubmissionSuccess BOOLEAN,
-				SuccessMessageClass VARCHAR(200),
-				FailureMessageClass VARCHAR(200),
-				Width INT(10),
-				WidthUnit VARCHAR(5),
-				LineHeight INT(10),
-				LineHeightUnit VARCHAR(5),
-				FormClass VARCHAR(200),
-				FormStyle TEXT,
-				Style VARCHAR(50),
-				PRIMARY KEY (id),
-				INDEX Description (Description));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_customforms_mailinglists (
-				id INT(11) NOT NULL auto_increment ,
-				CustomForms INT(11) NOT NULL DEFAULT 0,
-				Contacts INT(11) NOT NULL DEFAULT 0,
-				PRIMARY KEY (id),
-				INDEX CustomForms (CustomForms),
-				INDEX Contacts (Contacts));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformsentries (
-				id INT(11) NOT NULL auto_increment ,
-				Date INT(11),
-				Content TEXT,
-				Header TEXT,
-				Data TEXT,
-				CustomForms INT(11) NOT NULL DEFAULT 0,
-				Users INT(11) NOT NULL DEFAULT 0,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				SiteUser INT(11) NOT NULL DEFAULT 0,
-				PRIMARY KEY (id),
-				INDEX Description (Description),
-				INDEX CustomForms (CustomForms),
-				INDEX Users (Users),
-				INDEX SiteUser (SiteUser));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_roles (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(100) NOT NULL DEFAULT '',
-				Admin BOOLEAN,
-				Employee BOOLEAN,
-				PRIMARY KEY (id));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_users (
-				id INT(11) NOT NULL auto_increment ,
-				Description VARCHAR(200) NOT NULL DEFAULT '',
-				Name VARCHAR(100),
-				ContactType INT(11) NOT NULL DEFAULT 0,
-				Birthday INT(11),
-				Role INT(11) NOT NULL DEFAULT 0,
-				CMSId INT(11),
-				Notes TEXT,
-				email VARCHAR(100),
-				email2 VARCHAR(100),
-				Cell VARCHAR(30),
-				Phone1 VARCHAR(30),
-				Phone2 VARCHAR(30),
-				Phone3 VARCHAR(30),
-				SkypeId VARCHAR(100),
-				Website VARCHAR(200),
-				ContactField3 TEXT,
-				ContactField4 TEXT,
-				Country VARCHAR(300),
-				Address TEXT,
-				City VARCHAR(300),
-				State VARCHAR(300),
-				Zip VARCHAR(20),
-				Comment TEXT,
-				History TEXT,
-				PRIMARY KEY (id),
-				INDEX ContactType (ContactType),
-				INDEX CMSId (CMSId),
-				INDEX Description (Description),
-				INDEX Role (Role),
-				INDEX descriptionname (Description, Name));";
-				
-	$sqls[] = "CREATE TABLE #wp__easycontactforms_acl (
-				id INT(11) NOT NULL auto_increment,
-				objtype VARCHAR(50) NOT NULL,
-				method VARCHAR(50) NOT NULL,
-				name VARCHAR(50) NOT NULL,
-				role VARCHAR(50) NOT NULL,
-				PRIMARY KEY (id));";
-				
+	global $wpdb;
+	$collate = '';
+	if (!empty($wpdb->charset))
+		$collate = 'DEFAULT CHARACTER SET '. $wpdb->charset;
+	if (!empty($wpdb->collate))
+		$collate .= ' COLLATE ' . $wpdb->collate;
 
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	require_once dirName(__FILE__) . DIRECTORY_SEPARATOR . 'easy-contact-forms-database.php';
+				
+	$sqls = array();
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_applicationsettings (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				TinyMCEConfig text,
+				UseTinyMCE tinyint(1),
+				ApplicationWidth int(10),
+				ApplicationWidth2 int(10),
+				DefaultStyle varchar(50),
+				DefaultStyle2 varchar(50),
+				SecretWord varchar(50),
+				NotLoggenInText text,
+				FileFolder varchar(900),
+				SendFrom varchar(100),
+				FixJSLoading tinyint(1),
+				FormCompletionMinTime int(10),
+				FormCompletionMaxTime int(10),
+				FixStatus0 tinyint(1),
+				ProductVersion varchar(25),
+				PhoneRegEx varchar(100),
+				InitTime int(11),
+				ShowPoweredBy tinyint(1),
+				DateFormat varchar(500),
+				DateTimeFormat varchar(500),
+				FixStatus02 tinyint(1),
+				w3cCompliant tinyint(1),
+				w3cStyle varchar(50),
+				FixJSLoading2 tinyint(1),
+				AllowMarkupInEntries tinyint(1),
+				SkipWeeklyReport tinyint(1),
+				PRIMARY KEY  (id),
+				KEY Description (Description)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_contacttypes (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				Notes text,
+				PRIMARY KEY  (id),
+				KEY Description (Description)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformentryfiles (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				Date int(11),
+				CustomFormsEntries int(11) NOT NULL DEFAULT 0,
+				PRIMARY KEY  (id),
+				KEY Description (Description),
+				KEY CustomFormsEntries (CustomFormsEntries)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformentrystatistics (
+				id int(11) NOT NULL auto_increment,
+				PageName varchar(300),
+				TotalEntries int(10),
+				IncludeIntoReporting tinyint(1),
+				CustomForms int(11) NOT NULL DEFAULT 0,
+				Impressions int(10),
+				PRIMARY KEY  (id),
+				KEY CustomForms (CustomForms)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformfields (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				Type int(11) NOT NULL DEFAULT 0,
+				Settings text,
+				Template text,
+				ListPosition int(10) NOT NULL DEFAULT 0,
+				CustomForms int(11) NOT NULL DEFAULT 0,
+				FieldSet int(10),
+				PRIMARY KEY  (id),
+				KEY FieldSet (FieldSet),
+				KEY Description (Description),
+				KEY CustomForms (CustomForms),
+				KEY Type (Type),
+				KEY ListPosition (ListPosition)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformfieldtypes (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				CssClass varchar(100),
+				Settings text,
+				Signature text,
+				ListPosition int(10) NOT NULL DEFAULT 0,
+				ValueField tinyint(1),
+				HelpLink text,
+				PRIMARY KEY  (id),
+				KEY Description (Description),
+				KEY ListPosition (ListPosition)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customforms (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				NotificationSubject varchar(200),
+				SendFrom varchar(200),
+				SendConfirmation tinyint(1),
+				ConfirmationSubject varchar(200),
+				ConfirmationText text,
+				Redirect tinyint(1),
+				RedirectURL text,
+				ShortCode varchar(300),
+				Template tinyint(1),
+				ObjectOwner int(11) NOT NULL DEFAULT 0,
+				SubmissionSuccessText text,
+				StyleSheet text,
+				HTML mediumtext,
+				SendFromAddress varchar(200),
+				ShowSubmissionSuccess tinyint(1),
+				SuccessMessageClass varchar(200),
+				FailureMessageClass varchar(200),
+				Width int(10),
+				WidthUnit varchar(5),
+				LineHeight int(10),
+				LineHeightUnit varchar(5),
+				FormClass varchar(200),
+				FormStyle text,
+				Style varchar(50),
+				ConfirmationStyleSheet text,
+				TotalEntries int(10),
+				TotalProcessedEntries int(10),
+				Impressions int(10),
+				NotificationText text,
+				IncludeVisitorsAddressInReplyTo tinyint(1),
+				ReplyToNameTemplate varchar(200),
+				ConfirmationReplyToName varchar(200),
+				ConfirmationReplyToAddress varchar(200),
+				NotificationStyleSheet text,
+				SendConfirmationAsText tinyint(1),
+				SendNotificationAsText tinyint(1),
+				FadingDelay int(10),
+				MessageDelay int(10),
+				IncludeIntoReporting tinyint(1),
+				PRIMARY KEY  (id),
+				KEY ObjectOwner (ObjectOwner),
+				KEY Description (Description)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customforms_mailinglists (
+				id int(11) NOT NULL auto_increment,
+				CustomForms int(11) NOT NULL DEFAULT 0,
+				Contacts int(11) NOT NULL DEFAULT 0,
+				PRIMARY KEY  (id),
+				KEY CustomForms (CustomForms),
+				KEY Contacts (Contacts)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_customformsentries (
+				id int(11) NOT NULL auto_increment,
+				Date int(11),
+				Content mediumtext,
+				Header text,
+				Data text,
+				CustomForms int(11) NOT NULL DEFAULT 0,
+				Users int(11) NOT NULL DEFAULT 0,
+				Description varchar(200) NOT NULL DEFAULT '',
+				SiteUser int(11) NOT NULL DEFAULT 0,
+				PageName varchar(300),
+				PRIMARY KEY  (id),
+				KEY Description (Description),
+				KEY CustomForms (CustomForms),
+				KEY Users (Users),
+				KEY SiteUser (SiteUser)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_files (
+				id int(11) NOT NULL auto_increment,
+				Doctype varchar(80),
+				Docfield varchar(80),
+				Docid int(10),
+				Name varchar(300),
+				Type varchar(80),
+				Size int(10),
+				Protected tinyint(1),
+				Webdir tinyint(1),
+				Count int(11),
+				Storagename varchar(300),
+				ObjectOwner int(11),
+				PRIMARY KEY  (id),
+				KEY Docid (Docid),
+				KEY typefieldid (Doctype,Docfield,Docid),
+				KEY ObjectOwner (ObjectOwner)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_options (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				OptionGroup varchar(20),
+				Value text,
+				PRIMARY KEY  (id),
+				KEY OptionGroup (OptionGroup),
+				KEY Description (Description)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_roles (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(100) NOT NULL DEFAULT '',
+				Admin tinyint(1),
+				Employee tinyint(1),
+				PRIMARY KEY  (id)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_users (
+				id int(11) NOT NULL auto_increment,
+				Description varchar(200) NOT NULL DEFAULT '',
+				Name varchar(100),
+				ContactType int(11) NOT NULL DEFAULT 0,
+				Birthday int(11),
+				Role int(11) NOT NULL DEFAULT 0,
+				CMSId int(11),
+				Notes text,
+				email varchar(100),
+				email2 varchar(100),
+				Cell varchar(30),
+				Phone1 varchar(30),
+				Phone2 varchar(30),
+				Phone3 varchar(30),
+				SkypeId varchar(100),
+				Website varchar(200),
+				ContactField3 text,
+				ContactField4 text,
+				Country varchar(300),
+				Address text,
+				City varchar(300),
+				State varchar(300),
+				Zip varchar(20),
+				Comment text,
+				History text,
+				Options text,
+				PRIMARY KEY  (id),
+				KEY ContactType (ContactType),
+				KEY CMSId (CMSId),
+				KEY Description (Description),
+				KEY Role (Role),
+				KEY descriptionname (Description,Name)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_acl (
+				id int(11) NOT NULL auto_increment,
+				objtype varchar(50) NOT NULL,
+				method varchar(50) NOT NULL,
+				name varchar(50) NOT NULL,
+				role varchar(50) NOT NULL,
+				PRIMARY KEY  (id)) $collate;";
+				
+	$sqls[] = "CREATE TABLE #wp__easycontactforms_sessions (
+				id int(11) NOT NULL auto_increment,
+				opentime timestamp DEFAULT CURRENT_TIMESTAMP,
+				value text,
+				sid char(32) NOT NULL,
+				PRIMARY KEY  (id)) $collate;";
+				
 	foreach ($sqls as $sql){
 		$sql = EasyContactFormsDB::wptn($sql);
 		dbDelta($sql);
 	}
-	update_option( 'easy-contact-forms_db_version', '1.1.8.12' );
 }
 function easycontactforms_install_data() {
 	global $current_user, $wpdb;
-	$userid = $current_user->ID;
+	$userid = NULL;
+	if (isset($current_user)) {;
+		$userid = $current_user->ID;
+	}
+	$adminemail = get_option('admin_email');
 
 	$rows = array(
 		array(
-			'id' => 622,
-			'Description' => 'Please fill in the fields',
+			'id' => 285,
+			'Description' => 'Employee',
+			'Name' => 'Employee',
+			'ContactType' => 4,
+			'Birthday' => 300492000,
+			'Role' => 3,
+			'Notes' => 'Ut auctor ultrices elementum. Donec quis velit quam, ac mattis turpis. Praesent venenatis auctor sagittis.<br /><br />Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et.',
+			'email' => 'employee@championforms.example.com',
+			'email2' => 'employee2@championforms.example.com',
+			'Cell' => '+65 446-8025',
+			'Phone1' => '+51 939-3961',
+			'Phone2' => '+17 383-6744',
+			'Phone3' => '+56 624-1157',
+			'ContactField3' => 'Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et.',
+			'ContactField4' => 'Etiam neque nunc, fermentum sit amet fermentum ut, ultrices vitae neque. Maecenas nibh enim, dictum a semper et, sagittis viverra purus.',
+			'Country' => 'USA',
+			'Address' => '239 Filbert Street',
+			'City' => 'Ridley Park',
+			'State' => 'PA',
+			'Zip' => '19078',
+		),
+		array(
+			'id' => 286,
+			'Description' => 'SuperAdmin',
+			'Name' => 'SuperAdmin',
+			'ContactType' => 4,
+			'Birthday' => 299800800,
+			'Role' => 1,
+			'CMSId' => $userid,
+			'Notes' => 'Maecenas eget lectus ut odio mattis fringilla. Nunc sem leo, interdum id euismod sit amet, varius vel lorem.<br /><br />Ut auctor ultrices elementum. Donec quis velit quam, ac mattis turpis. Praesent venenatis auctor sagittis.',
+			'email' => $adminemail,
+			'Cell' => '+67 709-8655',
+			'Phone1' => '+64 555-1383',
+			'Phone2' => '+99 040-6159',
+			'Phone3' => '+86 839-8655',
+			'ContactField3' => 'Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus.',
+			'ContactField4' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
+			'Country' => 'USA',
+			'Address' => '28 Victoria Court',
+			'City' => 'Sanford',
+			'State' => 'ME',
+			'Zip' => '04073',
+		),
+		array(
+			'id' => 287,
+			'Description' => 'Pierce',
+			'Name' => 'Courtney',
+			'ContactType' => 4,
+			'Birthday' => 173570400,
+			'Role' => 4,
+			'Notes' => 'Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus.<br /><br />Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam.',
+			'email' => 'courtney@championforms.example.com',
+			'email2' => 'courtney2@championforms.example.com',
+			'Cell' => '+13 566-5699',
+			'Phone1' => '+29 240-9540',
+			'Phone2' => '+79 799-9207',
+			'Phone3' => '+67 288-1822',
+			'ContactField3' => 'Maecenas lacinia arcu nec nisl elementum nec cursus massa consequat.',
+			'ContactField4' => 'Praesent vel quam nunc. Aliquam cursus blandit semper.',
+			'Country' => 'USA',
+			'Address' => '188 Seth Street',
+			'City' => 'Fredonia',
+			'State' => 'TX',
+			'Zip' => '76842',
+		),
+		array(
+			'id' => 288,
+			'Description' => 'Hawkins',
+			'Name' => 'Josefina',
+			'ContactType' => 4,
+			'Birthday' => 237420000,
+			'Role' => 4,
+			'Notes' => 'Maecenas egestas consectetur nisl quis convallis. Maecenas nisi sapien, molestie ac rutrum et, vehicula sed orci.<br /><br />Etiam neque nunc, fermentum sit amet fermentum ut, ultrices vitae neque. Maecenas nibh enim, dictum a semper et, sagittis viverra purus.',
+			'email' => 'josefina@championforms.example.com',
+			'email2' => 'josefina2@championforms.example.com',
+			'Cell' => '+41 946-6091',
+			'Phone1' => '+68 539-2340',
+			'Phone2' => '+58 360-0962',
+			'Phone3' => '+09 670-2242',
+			'ContactField3' => 'Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus.',
+			'ContactField4' => 'Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus.',
+			'Country' => 'USA',
+			'Address' => '20 Franklin Street',
+			'City' => 'Montgomery',
+			'State' => 'AL',
+			'Zip' => '36107',
+		),
+		array(
+			'id' => 289,
+			'Description' => 'Maldonado',
+			'Name' => 'Nicole',
+			'ContactType' => 1,
+			'Birthday' => 364168800,
+			'Role' => 4,
+			'Notes' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac.<br /><br />Praesent ut facilisis odio. Maecenas congue neque ut nisi placerat vitae suscipit mauris fermentum.',
+			'email' => 'nicole@championforms.example.com',
+			'email2' => 'nicole2@championforms.example.com',
+			'Cell' => '+40 612-5881',
+			'Phone1' => '+34 120-0730',
+			'Phone2' => '+85 284-3971',
+			'Phone3' => '+45 100-8004',
+			'ContactField3' => 'Ut auctor ultrices elementum. Donec quis velit quam, ac mattis turpis. Praesent venenatis auctor sagittis.',
+			'ContactField4' => 'Maecenas lacinia arcu nec nisl elementum nec cursus massa consequat.',
+			'Country' => 'USA',
+			'Address' => '53 Graystone Lakes',
+			'City' => 'Unadilla',
+			'State' => 'GA',
+			'Zip' => '31091',
+		),
+		array(
+			'id' => 290,
+			'Description' => 'Vega',
+			'Name' => 'Dan',
+			'ContactType' => 1,
+			'Birthday' => 112399200,
+			'Role' => 4,
+			'Notes' => 'Maecenas eget lectus ut odio mattis fringilla. Nunc sem leo, interdum id euismod sit amet, varius vel lorem.<br /><br />Phasellus in metus in magna vestibulum ultricies. In nec metus mauris, vitae semper justo.',
+			'email' => 'dan@championforms.example.com',
+			'email2' => 'dan2@championforms.example.com',
+			'Cell' => '+55 667-1370',
+			'Phone1' => '+41 365-4503',
+			'Phone2' => '+92 160-0475',
+			'Phone3' => '+04 365-5904',
+			'ContactField3' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
+			'ContactField4' => 'Nunc molestie hendrerit arcu, non dapibus nulla suscipit ac. Nam eget nulla sit amet ante mollis pharetra.',
+			'Country' => 'USA',
+			'Address' => '149 Seneca Drive',
+			'City' => 'Silverton',
+			'State' => 'OR',
+			'Zip' => '97381',
+		),
+	);
+
+	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_users');
+	$count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table_name . ';' );
+	if ($count == 0) {
+		foreach ($rows as $row) {
+			$wpdb->insert($table_name, $row);
+		}
+	}
+
+
+	$rows = array(
+		array(
+			'id' => 3315,
+			'Description' => 'Please fill in the fields below',
+			'Type' => 2,
+			'Settings' => '<?xml version="1.0"?>
+<form>
+  
+  
+  <LabelTagName>h3</LabelTagName>
+  <Advanced/>
+  <LabelCSSClass/>
+  <LabelCSSStyle/>
+  <ShowDescription>off</ShowDescription>
+  <Description/>
+  <DescriptionPosition>top</DescriptionPosition>
+  <DescriptionCSSClass>ufo-customfields-container-description</DescriptionCSSClass>
+  <DescriptionCSSStyle/>
+  <SetStyle>off</SetStyle>
+  <CSSClass/>
+  <CSSStyle/>
+  <AddCF>off</AddCF>
+  <SetSize>off</SetSize>
+  <Width>230</Width>
+  <WidthUnit>px</WidthUnit>
+<ShowLabel><![CDATA[off]]></ShowLabel><Label><![CDATA[Please fill in the fields below]]></Label></form>',
+			'Template' => '<field><Container containertag="div" addcf="off"><![CDATA[<div>]]></Container></field>',
+			'ListPosition' => 3315,
+			'CustomForms' => 1,
+			'FieldSet' => 3315,
+		),
+		array(
+			'id' => 3316,
+			'Description' => 'Section',
 			'Type' => 2,
 			'Settings' => '<?xml version="1.0"?>
 <form>
@@ -199,227 +468,17 @@ function easycontactforms_install_data() {
   
   <Width>230</Width>
   <WidthUnit>px</WidthUnit>
-<ShowLabel><![CDATA[off]]></ShowLabel><Label><![CDATA[Please fill in the fields below]]></Label><DescriptionCSSClass><![CDATA[ufo-customfields-container-description]]></DescriptionCSSClass><DescriptionPosition><![CDATA[top-inside]]></DescriptionPosition><ShowDescription><![CDATA[on]]></ShowDescription><CSSStyle><![CDATA[]]></CSSStyle><SetStyle><![CDATA[off]]></SetStyle><SetSize><![CDATA[off]]></SetSize></form>',
+<DescriptionCSSClass><![CDATA[ufo-customfields-container-description]]></DescriptionCSSClass><DescriptionPosition><![CDATA[top-inside]]></DescriptionPosition><CSSStyle><![CDATA[]]></CSSStyle><SetStyle><![CDATA[off]]></SetStyle><SetSize><![CDATA[off]]></SetSize><ShowDescription><![CDATA[off]]></ShowDescription><ShowLabel><![CDATA[off]]></ShowLabel><AddCF>off</AddCF><Label><![CDATA[Section]]></Label></form>',
 			'Template' => '<field>
-      <ShowDescription position="top-inside"><![CDATA[<div class=\'ufo-customfields-container-description\'></div>]]></ShowDescription>
-    <Container containertag="div"><![CDATA[<div>]]></Container>
+    <Container containertag="div" addcf="off"><![CDATA[<div>
+     ]]></Container>
 </field>',
-			'ListPosition' => 624,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
+			'ListPosition' => 3316,
+			'CustomForms' => 1,
+			'FieldSet' => 3316,
 		),
 		array(
-			'id' => 644,
-			'Description' => 'Middle name',
-			'Type' => 14,
-			'Settings' => '<?xml version="1.0"?>
-<form>
-  
-  
-  
-  <Advanced/>
-  <LabelCSSClass/>
-  <LabelCSSStyle/>
-  
-  
-  <DescriptionPosition>bottom</DescriptionPosition>
-  <DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass>
-  <DescriptionCSSStyle/>
-  <SetDefaultValue>off</SetDefaultValue>
-  <DefaultValue/>
-  <IsBlankValue>on</IsBlankValue>
-  <DefaultValueCSSClass/>
-  <Required>off</Required>
-  <RequiredMessage>This field is required</RequiredMessage>
-  <RequiredMessagePosition>right</RequiredMessagePosition>
-  <SetRequiredSuffix>on</SetRequiredSuffix>
-  <RequiredSuffix>*</RequiredSuffix>
-  <RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass>
-  <RequiredSuffixCSSStyle/>
-  <AbsolutePosition>on</AbsolutePosition>
-  <InvalidCSSClass/>
-  <RequiredMessageCSSClass/>
-  <RequiredMessageCSSStyle/>
-  <Validate>off</Validate>
-  <MinLength/>
-  <MaxLength/>
-  <SetValidMessage>off</SetValidMessage>
-  <ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition>
-  <ValidMessage/>
-  <ValidMessagePosition>right</ValidMessagePosition>
-  <ValidCSSClass/>
-  <ValidCSSStyle/>
-  <SetStyle>off</SetStyle>
-  <CSSClass/>
-  <CSSStyle/>
-  <RowCSSClass/>
-  <SetSize>off</SetSize>
-  <Width>230</Width>
-  <WidthUnit>px</WidthUnit>
-<ShowLabel><![CDATA[on]]></ShowLabel><LabelPosition><![CDATA[top-align-left]]></LabelPosition><Label><![CDATA[Middle name]]></Label><ShowDescription><![CDATA[on]]></ShowDescription><Description><![CDATA[Please enter your middle name]]></Description></form>',
-			'Template' => '<field>
-      <ShowLabel position="top"><![CDATA[<label for=\'ufo-field-id-644\'  style=\'text-align:left\'>Middle name</label>]]></ShowLabel>
-        <ShowDescription position="bottom"><![CDATA[<div class=\'ufo-customfields-field-description\'>Please enter your middle name</div>]]></ShowDescription>
-          <Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-644\' value=\'{id-644}\' name=\'id-644\' >]]></Input>
-</field>',
-			'ListPosition' => 637,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
-		),
-		array(
-			'id' => 630,
-			'Description' => 'Submit',
-			'Type' => 6,
-			'Settings' => '<?xml version="1.0"?>
-<form>
-  
-  
-  
-  <Advanced/>
-  <LabelCSSClass/>
-  <LabelCSSStyle/>
-  <SetStyle>off</SetStyle>
-  <CSSClass/>
-  <CSSStyle/>
-  <RowCSSClass/>
-  <SetSize>off</SetSize>
-  <Width>100</Width>
-  <WidthUnit>px</WidthUnit>
-<ShowLabel><![CDATA[on]]></ShowLabel><Label><![CDATA[Submit]]></Label><InputPosition><![CDATA[left]]></InputPosition></form>',
-			'Template' => '<field>
-    <Validation><![CDATA[<script type=\'text/javascript\'>var c = {};c.id = \'ufo-field-id-630\';c.form = \'ufo-form-id-2\';c.Label = \'Submit\';ufoForms.submitButton(c);</script>]]></Validation>
-  <Input><![CDATA[<span id=\'ufo-field-id-630-span\'><noscript><button type=\'submit\' id=\'ufo-field-id-630\' name=\'id-630\' >Submit</button></noscript></span>]]></Input>
-</field>',
-			'ListPosition' => 648,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
-		),
-		array(
-			'id' => 625,
-			'Description' => 'Email',
-			'Type' => 5,
-			'Settings' => '<?xml version="1.0"?>
-<form>
-  
-  <Label>Email</Label>
-  
-  <Advanced/>
-  <LabelCSSClass/>
-  <LabelCSSStyle/>
-  <ShowDescription>off</ShowDescription>
-  <Description/>
-  <DescriptionPosition>bottom</DescriptionPosition>
-  <DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass>
-  <DescriptionCSSStyle/>
-  <SetDefaultValue>off</SetDefaultValue>
-  <DefaultValue>Your email</DefaultValue>
-  <IsBlankValue>on</IsBlankValue>
-  <DefaultValueCSSClass/>
-  <Required>on</Required>
-  <RequiredMessage>Please enter you email</RequiredMessage>
-  
-  <SetRequiredSuffix>on</SetRequiredSuffix>
-  <RequiredSuffix>*</RequiredSuffix>
-  <RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass>
-  <RequiredSuffixCSSStyle/>
-  
-  <InvalidCSSClass/>
-  <RequiredMessageCSSClass/>
-  <RequiredMessageCSSStyle/>
-  <Validate>on</Validate>
-  
-  <ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition>
-  <ValidMessage/>
-  <ValidMessagePosition>right</ValidMessagePosition>
-  <ValidCSSClass/>
-  <ValidCSSStyle/>
-  <SetStyle>off</SetStyle>
-  <CSSClass/>
-  <CSSStyle/>
-  <RowCSSClass/>
-  <SetSize>off</SetSize>
-  <Width>230</Width>
-  <WidthUnit>px</WidthUnit>
-  
-  
-  
-<LinkToAppField><![CDATA[Users_email]]></LinkToAppField><SetValidMessage><![CDATA[on]]></SetValidMessage><AbsolutePosition><![CDATA[on]]></AbsolutePosition><SetContactOptions><![CDATA[on]]></SetContactOptions><RegistredUsersOptions><![CDATA[hidefilled]]></RegistredUsersOptions><ShowLabel><![CDATA[on]]></ShowLabel><LabelPosition><![CDATA[left-align-left]]></LabelPosition><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition></form>',
-			'Template' => '<field>
-      <ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-625\'  style=\'text-align:left\'>Email<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel>
-          <RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-625-invalid\'  style=\'display:none\'></div>]]></RequiredMessage>
-        <ValidMessage position="right"><![CDATA[<div id=\'ufo-field-id-625-valid\'  style=\'display:none\'></div>]]></ValidMessage>
-        <Validation><![CDATA[<script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required","email"]},"Required":true,"Validate":true,"showValid":true,"ValidMessageAbsolutePosition":true,"ValidMessagePosition":"right","RequiredMessage":"Please enter you email","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-625","form":"ufo-form-id-2"});</script>]]></Validation>
-    <Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-625\' value=\'{id-625}\' name=\'id-625\' >]]></Input>
-</field>',
-			'ListPosition' => 643,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
-		),
-		array(
-			'id' => 647,
-			'Description' => 'Last name',
-			'Type' => 4,
-			'Settings' => '<?xml version="1.0"?>
-<form>
-  
-  
-  <LabelPosition>left-align-left</LabelPosition>
-  <Advanced/>
-  <LabelCSSClass/>
-  <LabelCSSStyle/>
-  <ShowDescription>off</ShowDescription>
-  <Description/>
-  <DescriptionPosition>bottom</DescriptionPosition>
-  <DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass>
-  <DescriptionCSSStyle/>
-  <SetDefaultValue>off</SetDefaultValue>
-  <DefaultValue/>
-  <IsBlankValue>on</IsBlankValue>
-  <DefaultValueCSSClass/>
-  
-  
-  
-  <SetRequiredSuffix>on</SetRequiredSuffix>
-  <RequiredSuffix>*</RequiredSuffix>
-  <RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass>
-  <RequiredSuffixCSSStyle/>
-  
-  <InvalidCSSClass/>
-  <RequiredMessageCSSClass/>
-  <RequiredMessageCSSStyle/>
-  
-  
-  
-  
-  <ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition>
-  <ValidMessage/>
-  <ValidMessagePosition>right</ValidMessagePosition>
-  <ValidCSSClass/>
-  <ValidCSSStyle/>
-  <SetStyle>off</SetStyle>
-  <CSSClass/>
-  <CSSStyle/>
-  <RowCSSClass/>
-  <SetSize>off</SetSize>
-  <Width>230</Width>
-  <WidthUnit>px</WidthUnit>
-  
-  
-  
-<Label><![CDATA[Last name]]></Label><Required><![CDATA[on]]></Required><Validate><![CDATA[on]]></Validate><SetValidMessage><![CDATA[on]]></SetValidMessage><AbsolutePosition><![CDATA[on]]></AbsolutePosition><LinkToAppField><![CDATA[Users_Description]]></LinkToAppField><SetContactOptions><![CDATA[on]]></SetContactOptions><RegistredUsersOptions><![CDATA[hidefilled]]></RegistredUsersOptions><ShowLabel><![CDATA[on]]></ShowLabel><MinLength><![CDATA[2]]></MinLength><MaxLength><![CDATA[45]]></MaxLength><RequiredMessage><![CDATA[Your last name is required (from 2 to 45 characters)]]></RequiredMessage><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition></form>',
-			'Template' => '<field>
-      <ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-647\'  style=\'text-align:left\'>Last name<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel>
-          <RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-647-invalid\'  style=\'display:none\'></div>]]></RequiredMessage>
-        <ValidMessage position="right"><![CDATA[<div id=\'ufo-field-id-647-valid\'  style=\'display:none\'></div>]]></ValidMessage>
-        <Validation><![CDATA[<script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required","minmax"]},"Required":true,"Validate":true,"showValid":true,"ValidMessageAbsolutePosition":true,"ValidMessagePosition":"right","RequiredMessage":"Your last name is required (from 2 to 45 characters)","AbsolutePosition":true,"RequiredMessagePosition":"right","min":"2","max":"45","id":"ufo-field-id-647","form":"ufo-form-id-2"});</script>]]></Validation>
-    <Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-647\' value=\'{id-647}\' name=\'id-647\' >]]></Input>
-</field>',
-			'ListPosition' => 639,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
-		),
-		array(
-			'id' => 627,
+			'id' => 3318,
 			'Description' => 'First name',
 			'Type' => 4,
 			'Settings' => '<?xml version="1.0"?>
@@ -454,7 +513,7 @@ function easycontactforms_install_data() {
   
   
   
-  <ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition>
+  
   <ValidMessage/>
   <ValidMessagePosition>right</ValidMessagePosition>
   <ValidCSSClass/>
@@ -469,25 +528,131 @@ function easycontactforms_install_data() {
   
   
   
-<Required><![CDATA[on]]></Required><Validate><![CDATA[on]]></Validate><LinkToAppField><![CDATA[Users_Name]]></LinkToAppField><Label><![CDATA[First name]]></Label><SetValidMessage><![CDATA[on]]></SetValidMessage><AbsolutePosition><![CDATA[on]]></AbsolutePosition><SetContactOptions><![CDATA[on]]></SetContactOptions><RegistredUsersOptions><![CDATA[hidefilled]]></RegistredUsersOptions><MinLength><![CDATA[2]]></MinLength><MaxLength><![CDATA[45]]></MaxLength><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition><RequiredMessage><![CDATA[Your first name is required (from 2 to 45 characters)]]></RequiredMessage><LabelPosition><![CDATA[left-align-left]]></LabelPosition><ShowLabel><![CDATA[on]]></ShowLabel></form>',
-			'Template' => '<field>
-      <ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-627\'  style=\'text-align:left\'>First name<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel>
-          <RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-627-invalid\'  style=\'display:none\'></div>]]></RequiredMessage>
-        <ValidMessage position="right"><![CDATA[<div id=\'ufo-field-id-627-valid\'  style=\'display:none\'></div>]]></ValidMessage>
-        <Validation><![CDATA[<script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required","minmax"]},"Required":true,"Validate":true,"showValid":true,"ValidMessageAbsolutePosition":true,"ValidMessagePosition":"right","RequiredMessage":"Your first name is required (from 2 to 45 characters)","AbsolutePosition":true,"RequiredMessagePosition":"right","min":"2","max":"45","id":"ufo-field-id-627","form":"ufo-form-id-2"});</script>]]></Validation>
-    <Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-627\' value=\'{id-627}\' name=\'id-627\' >]]></Input>
-</field>',
-			'ListPosition' => 625,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
+<Required><![CDATA[on]]></Required><Label><![CDATA[First name]]></Label><AbsolutePosition><![CDATA[on]]></AbsolutePosition><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition><LabelPosition><![CDATA[left-align-left]]></LabelPosition><ShowLabel><![CDATA[on]]></ShowLabel><Validate><![CDATA[off]]></Validate><MinLength><![CDATA[0]]></MinLength><MaxLength><![CDATA[0]]></MaxLength><SetContactOptions><![CDATA[off]]></SetContactOptions><RegistredUsersOptions><![CDATA[none]]></RegistredUsersOptions><LinkToAppField><![CDATA[]]></LinkToAppField><RequiredMessage><![CDATA[This field is required]]></RequiredMessage><SetValidMessage><![CDATA[off]]></SetValidMessage><ValidMessageAbsolutePosition><![CDATA[off]]></ValidMessageAbsolutePosition></form>',
+			'Template' => '<field><ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-3318\'  style=\'text-align:left\'>First name<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel><RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-3318-invalid\'  style=\'display:none\'></div>]]></RequiredMessage><Validation><![CDATA[<script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3318","form":"ufo-form-id-1"});</script>]]></Validation><Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-3318\' value=\'{id-3318}\' name=\'id-3318\' />]]></Input></field>',
+			'ListPosition' => 3318,
+			'CustomForms' => 1,
+			'FieldSet' => 3316,
 		),
 		array(
-			'id' => 648,
+			'id' => 3319,
+			'Description' => 'Last name',
+			'Type' => 4,
+			'Settings' => '<?xml version="1.0"?>
+<form>
+  
+  
+  <LabelPosition>left-align-left</LabelPosition>
+  <Advanced/>
+  <LabelCSSClass/>
+  <LabelCSSStyle/>
+  <ShowDescription>off</ShowDescription>
+  <Description/>
+  <DescriptionPosition>bottom</DescriptionPosition>
+  <DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass>
+  <DescriptionCSSStyle/>
+  <SetDefaultValue>off</SetDefaultValue>
+  <DefaultValue/>
+  <IsBlankValue>on</IsBlankValue>
+  <DefaultValueCSSClass/>
+  
+  
+  
+  <SetRequiredSuffix>on</SetRequiredSuffix>
+  <RequiredSuffix>*</RequiredSuffix>
+  <RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass>
+  <RequiredSuffixCSSStyle/>
+  
+  <InvalidCSSClass/>
+  <RequiredMessageCSSClass/>
+  <RequiredMessageCSSStyle/>
+  
+  
+  
+  
+  
+  <ValidMessage/>
+  <ValidMessagePosition>right</ValidMessagePosition>
+  <ValidCSSClass/>
+  <ValidCSSStyle/>
+  <SetStyle>off</SetStyle>
+  <CSSClass/>
+  <CSSStyle/>
+  <RowCSSClass/>
+  <SetSize>off</SetSize>
+  <Width>230</Width>
+  <WidthUnit>px</WidthUnit>
+  
+  
+  
+<Label><![CDATA[Last name]]></Label><Required><![CDATA[on]]></Required><AbsolutePosition><![CDATA[on]]></AbsolutePosition><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition><ShowLabel><![CDATA[on]]></ShowLabel><Validate><![CDATA[off]]></Validate><MinLength><![CDATA[0]]></MinLength><MaxLength><![CDATA[0]]></MaxLength><SetContactOptions><![CDATA[off]]></SetContactOptions><RegistredUsersOptions><![CDATA[none]]></RegistredUsersOptions><LinkToAppField><![CDATA[]]></LinkToAppField><RequiredMessage><![CDATA[This field is required]]></RequiredMessage><SetValidMessage><![CDATA[off]]></SetValidMessage><ValidMessageAbsolutePosition><![CDATA[off]]></ValidMessageAbsolutePosition></form>',
+			'Template' => '<field><ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-3319\'  style=\'text-align:left\'>Last name<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel><RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-3319-invalid\'  style=\'display:none\'></div>]]></RequiredMessage><Validation><![CDATA[<script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3319","form":"ufo-form-id-1"});</script>]]></Validation><Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-3319\' value=\'{id-3319}\' name=\'id-3319\' />]]></Input></field>',
+			'ListPosition' => 3319,
+			'CustomForms' => 1,
+			'FieldSet' => 3316,
+		),
+		array(
+			'id' => 3320,
+			'Description' => 'Email',
+			'Type' => 5,
+			'Settings' => '<?xml version="1.0"?>
+<form>
+  
+  <Label>Email</Label>
+  
+  <Advanced/>
+  <LabelCSSClass/>
+  <LabelCSSStyle/>
+  <ShowDescription>off</ShowDescription>
+  <Description/>
+  <DescriptionPosition>bottom</DescriptionPosition>
+  <DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass>
+  <DescriptionCSSStyle/>
+  <SetDefaultValue>off</SetDefaultValue>
+  <DefaultValue>Your email</DefaultValue>
+  <IsBlankValue>on</IsBlankValue>
+  <DefaultValueCSSClass/>
+  <Required>on</Required>
+  <RequiredMessage>Please enter you email</RequiredMessage>
+  
+  <SetRequiredSuffix>on</SetRequiredSuffix>
+  <RequiredSuffix>*</RequiredSuffix>
+  <RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass>
+  <RequiredSuffixCSSStyle/>
+  
+  <InvalidCSSClass/>
+  <RequiredMessageCSSClass/>
+  <RequiredMessageCSSStyle/>
+  <Validate>on</Validate>
+  
+  
+  <ValidMessage/>
+  <ValidMessagePosition>right</ValidMessagePosition>
+  <ValidCSSClass/>
+  <ValidCSSStyle/>
+  <SetStyle>off</SetStyle>
+  <CSSClass/>
+  <CSSStyle/>
+  <RowCSSClass/>
+  <SetSize>off</SetSize>
+  <Width>230</Width>
+  <WidthUnit>px</WidthUnit>
+  
+  
+  
+<AbsolutePosition><![CDATA[on]]></AbsolutePosition><LabelPosition><![CDATA[left-align-left]]></LabelPosition><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition><ShowLabel><![CDATA[on]]></ShowLabel><RegistredUsersOptions><![CDATA[none]]></RegistredUsersOptions><LinkToAppField><![CDATA[]]></LinkToAppField><SetContactOptions><![CDATA[off]]></SetContactOptions><SetValidMessage><![CDATA[off]]></SetValidMessage><ValidMessageAbsolutePosition><![CDATA[off]]></ValidMessageAbsolutePosition></form>',
+			'Template' => '<field><ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-3320\'  style=\'text-align:left\'>Email<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel><RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-3320-invalid\'  style=\'display:none\'></div>]]></RequiredMessage><Validation><![CDATA[<script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required","email"]},"Required":true,"Validate":true,"RequiredMessage":"Please enter you email","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3320","form":"ufo-form-id-1"});</script>]]></Validation><Input ><![CDATA[<input type=\'text\' id=\'ufo-field-id-3320\' value=\'{id-3320}\' name=\'id-3320\' />]]></Input></field>',
+			'ListPosition' => 3320,
+			'CustomForms' => 1,
+			'FieldSet' => 3316,
+		),
+		array(
+			'id' => 3321,
 			'Description' => 'Your request',
 			'Type' => 10,
 			'Settings' => '<?xml version="1.0"?>
 <form>
-  <ShowLabel>on</ShowLabel>
+  
   
   
   <Advanced/>
@@ -516,13 +681,13 @@ function easycontactforms_install_data() {
   <Validate>off</Validate>
   <MinLength/>
   <MaxLength/>
-  <SetValidMessage>off</SetValidMessage>
-  <ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition>
+  
+  
   <ValidMessage/>
   <ValidMessagePosition>right</ValidMessagePosition>
   <ValidCSSClass/>
   <ValidCSSStyle/>
-  <SetStyle>off</SetStyle>
+  
   <CSSClass/>
   <CSSStyle/>
   <RowCSSClass/>
@@ -531,21 +696,16 @@ function easycontactforms_install_data() {
   <WidthUnit>px</WidthUnit>
   
   <HeightUnit>px</HeightUnit>
-<Label><![CDATA[Your request]]></Label><Description><![CDATA[Please provide us with your request details]]></Description><DescriptionPosition><![CDATA[top]]></DescriptionPosition><Required><![CDATA[on]]></Required><SetSize><![CDATA[on]]></SetSize><LabelPosition><![CDATA[top-align-left]]></LabelPosition><ShowDescription><![CDATA[off]]></ShowDescription><Height><![CDATA[150]]></Height><Width><![CDATA[360]]></Width></form>',
-			'Template' => '<field>
-      <ShowLabel position="top"><![CDATA[<label for=\'ufo-field-id-648\'  style=\'text-align:left\'>Your request<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel>
-          <RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-648-invalid\'  style=\'display:none\'></div>]]></RequiredMessage>
-          <Validation><![CDATA[<script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-648","form":"ufo-form-id-2"});</script>]]></Validation>
-    <Input  width="360px"><![CDATA[<textarea id=\'ufo-field-id-648\' name=\'id-648\'  style=\'height:150px;width:360px\'>{id-648}</textarea>]]></Input>
-</field>',
-			'ListPosition' => 647,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
+<Label><![CDATA[Your request]]></Label><Description><![CDATA[Please provide us with your request details]]></Description><DescriptionPosition><![CDATA[top]]></DescriptionPosition><Required><![CDATA[on]]></Required><SetSize><![CDATA[on]]></SetSize><LabelPosition><![CDATA[top-align-left]]></LabelPosition><ShowDescription><![CDATA[off]]></ShowDescription><Width><![CDATA[360]]></Width><ShowLabel><![CDATA[on]]></ShowLabel><SetContactOptions>off</SetContactOptions><SetStyle><![CDATA[off]]></SetStyle><Height><![CDATA[100]]></Height><SetValidMessage><![CDATA[off]]></SetValidMessage><ValidMessageAbsolutePosition><![CDATA[off]]></ValidMessageAbsolutePosition></form>',
+			'Template' => '<field><ShowLabel position="top"><![CDATA[<label for=\'ufo-field-id-3321\'  style=\'text-align:left\'>Your request<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel><RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-3321-invalid\'  style=\'display:none\'></div>]]></RequiredMessage><Validation><![CDATA[<script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3321","form":"ufo-form-id-1"});</script>]]></Validation><Input  width="360px"><![CDATA[<textarea id=\'ufo-field-id-3321\' name=\'id-3321\'  style=\'height:100px;width:360px\'>{id-3321}</textarea>]]></Input></field>',
+			'ListPosition' => 3321,
+			'CustomForms' => 1,
+			'FieldSet' => 3316,
 		),
 		array(
-			'id' => 642,
-			'Description' => 'Select a product',
-			'Type' => 3,
+			'id' => 3322,
+			'Description' => 'Submit',
+			'Type' => 6,
 			'Settings' => '<?xml version="1.0"?>
 <form>
   
@@ -554,48 +714,23 @@ function easycontactforms_install_data() {
   <Advanced/>
   <LabelCSSClass/>
   <LabelCSSStyle/>
-  <ShowDescription>off</ShowDescription>
-  <Description/>
-  <DescriptionPosition>bottom</DescriptionPosition>
-  <DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass>
-  <DescriptionCSSStyle/>
-  <SetOptions>on</SetOptions>
-  
-  
-  
-  
-  
-  
-  <SetRequiredSuffix>on</SetRequiredSuffix>
-  <RequiredSuffix>*</RequiredSuffix>
-  <RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass>
-  <RequiredSuffixCSSStyle/>
-  
-  <InvalidCSSClass/>
-  <RequiredMessageCSSClass/>
-  <RequiredMessageCSSStyle/>
   <SetStyle>off</SetStyle>
   <CSSClass/>
   <CSSStyle/>
   <RowCSSClass/>
   
-  <Width>230</Width>
+  <Width>100</Width>
   <WidthUnit>px</WidthUnit>
-<HasEmpty><![CDATA[on]]></HasEmpty><Required><![CDATA[on]]></Required><AbsolutePosition><![CDATA[on]]></AbsolutePosition><SetSize><![CDATA[on]]></SetSize><EmptyOption><![CDATA[Products]]></EmptyOption><ShowLabel><![CDATA[on]]></ShowLabel><RequiredMessage><![CDATA[Please select a product]]></RequiredMessage><Label><![CDATA[Select a product]]></Label><LabelPosition><![CDATA[left-align-left]]></LabelPosition><RequiredMessagePosition><![CDATA[right]]></RequiredMessagePosition><Options type="items"><option index="0">Product 1</option><option index="1" default="true">Product 2</option><option index="2">Product 3</option></Options></form>',
-			'Template' => '<field>
-      <ShowLabel position="left"><![CDATA[<label for=\'ufo-field-id-642\'  style=\'text-align:left\'>Select a product<span class=\'ufo-customfields-required-suffix\'>*</span></label>]]></ShowLabel>
-          <RequiredMessage position="right"><![CDATA[<div id=\'ufo-field-id-642-invalid\'  style=\'display:none\'></div>]]></RequiredMessage>
-        <Validation><![CDATA[<script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required"],"change":["required"]},"Required":true,"RequiredMessage":"Please select a product","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-642","form":"ufo-form-id-2"});</script>]]></Validation>
-    <Input  width="230px"><![CDATA[<select id=\'ufo-field-id-642\' value=\'{id-642}\' name=\'id-642\'  style=\'width:230px\'><option value="">Products</option><option value=\'Product 1\'>Product 1</option><option value=\'Product 2\' selected>Product 2</option><option value=\'Product 3\'>Product 3</option></select>]]></Input>
-</field>',
-			'ListPosition' => 644,
-			'CustomForms' => 2,
-			'FieldSet' => 622,
+<InputPosition><![CDATA[left]]></InputPosition><ShowLabel><![CDATA[on]]></ShowLabel><SetSize><![CDATA[off]]></SetSize><Label><![CDATA[Submit]]></Label></form>',
+			'Template' => '<field><Validation><![CDATA[<script type=\'text/javascript\'>var c = {};c.id = \'ufo-field-id-3322\';c.form = \'ufo-form-id-1\';c.Label = \'Submit\';ufoFormsConfig.submits.push(c);</script>]]></Validation><Input><![CDATA[<span id=\'ufo-field-id-3322-span\'><noscript><button type=\'submit\' id=\'ufo-field-id-3322\' name=\'id-3322\' >Submit</button></noscript></span>]]></Input></field>',
+			'ListPosition' => 3322,
+			'CustomForms' => 1,
+			'FieldSet' => 3316,
 		),
 	);
 
 	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_customformfields');
-	$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ';' ) );
+	$count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table_name . ';' );
 	if ($count == 0) {
 		foreach ($rows as $row) {
 			$wpdb->insert($table_name, $row);
@@ -606,20 +741,33 @@ function easycontactforms_install_data() {
 	$rows = array(
 		array(
 			'id' => 1,
-			'Description' => 'AppSettings',
-			'TinyMCEConfig' => '{theme_advanced_buttons4:"",mode:"exact",theme_advanced_statusbar_location:"",theme_advanced_toolbar_align:"left",theme_advanced_resizing:"true",plugins:"fullscreen",theme_advanced_toolbar_location:"top",theme_advanced_buttons1:"bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect,fontselect,fontsizeselect",theme_advanced_buttons2:"bullist,numlist,|,outdent,indent,|,undo,redo,|,link,unlink,anchor,image,cleanup,|,forecolor,backcolor,|,fullscreen",theme_advanced_buttons3:"",theme:"advanced"}',
-			'UseTinyMCE' => 1,
-			'ApplicationWidth' => 800,
-			'ApplicationWidth2' => 900,
-			'DefaultStyle' => 'std',
-			'DefaultStyle2' => 'std',
-			'NotLoggenInText' => 'Please log in.',
-			'SendFrom' => 'youremail@here',
+			'Description' => 'Simple contact form',
+			'NotificationSubject' => 'New request received',
+			'SendFrom' => 'Champion Forms',
+			'SendConfirmation' => 0,
+			'ConfirmationSubject' => 'We have received your request',
+			'Redirect' => 0,
+			'ShortCode' => '[easy_contact_forms fid=1]',
+			'Template' => 0,
+			'ObjectOwner' => 286,
+			'SubmissionSuccessText' => 'Thank you for contacting us! We are glad to hear from you.',
+			'HTML' => '<script type=\'text/javascript\'>if (typeof(ecfconfig) == \'undefined\'){var ecfconfig={};}ecfconfig[1]={};var ufobaseurl =  \'http://localhost/wordpress-3.3/wp-admin/admin-ajax.php\';if (typeof(ufoFormsConfig) == \'undefined\') {var ufoFormsConfig = {};ufoFormsConfig.submits = [];ufoFormsConfig.resets = [];ufoFormsConfig.validations = [];}ufoFormsConfig.phonenumberre = /^(\+{0,1}\d{1,2})*\s*(\(?\d{3}\)?\s*)*\d{3}(-{0,1}|\s{0,1})\d{2}(-{0,1}|\s{0,1})\d{2}$/;</script><link href=\'http://localhost/wordpress-3.3/wp-content/plugins/easy-contact-forms/forms/styles/easyform/css/std.css?ver=1.4.9\' rel=\'stylesheet\' type=\'text/css\'/><div class=\'ufo-form\' id=\'ufo-form-id-1\'><noscript><form method=\'post\'><input type=\'hidden\' name=\'cf-no-script\' value=\'1\'/></noscript><input type=\'hidden\' value=\'ufo-form-id-1\' name=\'hidden-1\' id=\'ufo-form-hidden-1\'/><input type=\'hidden\' value=\'{__pagename}\' name=\'ufo-form-pagename\' id=\'ufo-form-pagename\'/>{preview}<input type=\'hidden\' value=\'{ufosignature}\' name=\'ufo-sign\' id=\'ufo-sign\'/><div></div><div>
+     <div class=\'ufo-fieldtype-4 ufo-customform-row ufo-row-3318\' style=\'margin-top:2px;{display-3318}\'><div class=\'ufo-cell-3318-2-row\' id=\'ufo-cell-3318-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-3318-2-left\'><label for=\'ufo-field-id-3318\'  style=\'text-align:left\'>First name<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' id=\'ufo-cell-3318-2-center\'><script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3318","form":"ufo-form-id-1"});</script><input type=\'text\' id=\'ufo-field-id-3318\' value=\'{id-3318}\' name=\'id-3318\' /></span><span class=\'ufo-cell-right\' id=\'ufo-cell-3318-2-right\'><div id=\'ufo-field-id-3318-invalid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-fieldtype-4 ufo-customform-row ufo-row-3319\' style=\'margin-top:2px;{display-3319}\'><div class=\'ufo-cell-3319-2-row\' id=\'ufo-cell-3319-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-3319-2-left\'><label for=\'ufo-field-id-3319\'  style=\'text-align:left\'>Last name<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' id=\'ufo-cell-3319-2-center\'><script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3319","form":"ufo-form-id-1"});</script><input type=\'text\' id=\'ufo-field-id-3319\' value=\'{id-3319}\' name=\'id-3319\' /></span><span class=\'ufo-cell-right\' id=\'ufo-cell-3319-2-right\'><div id=\'ufo-field-id-3319-invalid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-fieldtype-5 ufo-customform-row ufo-row-3320\' style=\'margin-top:2px;{display-3320}\'><div class=\'ufo-cell-3320-2-row\' id=\'ufo-cell-3320-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-3320-2-left\'><label for=\'ufo-field-id-3320\'  style=\'text-align:left\'>Email<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' id=\'ufo-cell-3320-2-center\'><script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required","email"]},"Required":true,"Validate":true,"RequiredMessage":"Please enter you email","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3320","form":"ufo-form-id-1"});</script><input type=\'text\' id=\'ufo-field-id-3320\' value=\'{id-3320}\' name=\'id-3320\' /></span><span class=\'ufo-cell-right\' id=\'ufo-cell-3320-2-right\'><div id=\'ufo-field-id-3320-invalid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-fieldtype-10 ufo-customform-row ufo-row-3321\' style=\'margin-top:2px;{display-3321}\'><div class=\'ufo-cell-3321-1-row\' id=\'ufo-cell-3321-1\'><span class=\'ufo-cell-center\' style=\'width:360px\' id=\'ufo-cell-3321-1-center\'><label for=\'ufo-field-id-3321\'  style=\'text-align:left\'>Your request<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-right\' id=\'ufo-cell-3321-1-right\'><p style=\'display:none\'></p></span></div><div class=\'ufo-cell-3321-2-row\' id=\'ufo-cell-3321-2\'><span class=\'ufo-cell-center\' style=\'width:360px\' id=\'ufo-cell-3321-2-center\'><script type=\'text/javascript\'>ufoFormsConfig.validations.push({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-3321","form":"ufo-form-id-1"});</script><textarea id=\'ufo-field-id-3321\' name=\'id-3321\'  style=\'height:100px;width:360px\'>{id-3321}</textarea></span><span class=\'ufo-cell-right\' id=\'ufo-cell-3321-2-right\'><div id=\'ufo-field-id-3321-invalid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-fieldtype-6 ufo-customform-row ufo-row-3322\' style=\'margin-top:2px;{display-3322}\'><div class=\'ufo-cell-3322-2-row\' id=\'ufo-cell-3322-2\'><span class=\'ufo-cell-center\' id=\'ufo-cell-3322-2-center\'><script type=\'text/javascript\'>var c = {};c.id = \'ufo-field-id-3322\';c.form = \'ufo-form-id-1\';c.Label = \'Submit\';ufoFormsConfig.submits.push(c);</script><span id=\'ufo-field-id-3322-span\'><noscript><button type=\'submit\' id=\'ufo-field-id-3322\' name=\'id-3322\' >Submit</button></noscript></span></span></div></div></div><div id=\'ufo-form-id-1-message\'></div><noscript></form></noscript></div>',
+			'ShowSubmissionSuccess' => 1,
+			'WidthUnit' => 'px',
+			'LineHeight' => 2,
+			'LineHeightUnit' => 'px',
+			'Style' => 'easyform',
+			'TotalEntries' => 2,
+			'IncludeVisitorsAddressInReplyTo' => 0,
+			'SendConfirmationAsText' => 0,
+			'SendNotificationAsText' => 0,
+			'IncludeIntoReporting' => 1,
 		),
 	);
 
-	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_applicationsettings');
-	$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ';' ) );
+	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_customforms');
+	$count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table_name . ';' );
 	if ($count == 0) {
 		foreach ($rows as $row) {
 			$wpdb->insert($table_name, $row);
@@ -629,8 +777,141 @@ function easycontactforms_install_data() {
 
 	$rows = array(
 		array(
-			'objtype' => 'CustomForms',
-			'method' => 'val',
+			'id' => 1,
+			'Description' => '2012-01-25',
+			'OptionGroup' => 'dateformats',
+			'Value' => 'Y-m-d^%Y-%m-%d^\d{4}-\d{2}-\d{2}$^2012-01-25',
+		),
+		array(
+			'id' => 2,
+			'Description' => 'Y-m-d hh:mm',
+			'OptionGroup' => 'datetimeformats',
+			'Value' => 'Y-m-d H:i^%Y-%m-%d %H:%M^\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}^Y-m-d hh:mm',
+		),
+		array(
+			'id' => 3,
+			'Description' => '01/25/2012',
+			'OptionGroup' => 'dateformats',
+			'Value' => 'm/d/Y^%m/%d/%Y^\d{2}\/\d{2}\/\d{4}$^01/25/2012',
+		),
+		array(
+			'id' => 4,
+			'Description' => 'd.m.Y hh:mm',
+			'OptionGroup' => 'datetimeformats',
+			'Value' => 'd.m.Y H:i^%d.%m.%Y %H:%M^\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{1,2}^d.m.Y hh:mm',
+		),
+		array(
+			'id' => 5,
+			'Description' => '25/01/2012',
+			'OptionGroup' => 'dateformats',
+			'Value' => 'd/m/Y^%d/%m/%Y^\d{2}\/\d{2}\/\d{4}$^25/01/2012',
+		),
+		array(
+			'id' => 6,
+			'Description' => '25.01.2012',
+			'OptionGroup' => 'dateformats',
+			'Value' => 'd.m.Y^%d.%m.%Y^\d{2}\.\d{2}\.\d{4}$^25.01.2012',
+		),
+		array(
+			'id' => 7,
+			'Description' => '25-01-2012',
+			'OptionGroup' => 'dateformats',
+			'Value' => 'd-m-Y^%d-%m-%Y^\d{2}-\d{2}-\d{4}$^25-01-2012',
+		),
+	);
+
+	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_options');
+	$existent = $wpdb->get_col( 'SELECT Description FROM ' . $table_name . ';' );
+	foreach ($rows as $row) {
+		$rid = $row['Description'];
+		if (!in_array($rid, $existent)) {
+			$wpdb->insert($table_name, $row);
+		}
+	}
+
+
+	$rows = array(
+		array(
+			'objtype' => 'CustomFormEntryFiles',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Tasks',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactField2',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'TaskTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactField1',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderFiles',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Products',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'upload',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderField1',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactField1',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'fixOrder',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getDashboardAPIText',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'dismissPointer',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderField1',
+			'method' => 'show',
 			'name' => 'main',
 			'role' => 'SuperAdmin',
 		),
@@ -638,7 +919,121 @@ function easycontactforms_install_data() {
 			'objtype' => 'Users',
 			'method' => 'show',
 			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'addCustomField',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'OrderStatuses',
+			'method' => 'view',
+			'name' => 'main',
 			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders_MailingLists',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'add',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Locales',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderField2',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderStatuses',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ProductUnitTypes',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'val',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'setFormPageStatisticsShowOnDashboard',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'OrderField1',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ProductUnitTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFields',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderStatuses',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'getSettingsForm',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Tasks',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Priorities',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
 		),
 		array(
 			'objtype' => 'CustomForms_MailingLists',
@@ -647,134 +1042,14 @@ function easycontactforms_install_data() {
 			'role' => 'SuperAdmin',
 		),
 		array(
-			'objtype' => 'CustomFormsEntries',
-			'method' => 'view',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomForms',
-			'method' => 'new',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'updateOrder',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'ApplicationSettings',
-			'method' => 'show',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'viewDetailed',
-			'name' => 'detailedMain',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'moveFieldSet',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomForms',
-			'method' => 'view',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'addCustomField',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'Users',
-			'method' => 'view',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomForms',
-			'method' => 'preview',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'ContactTypes',
-			'method' => 'show',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomForms',
-			'method' => 'refreshForm',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'ContactTypes',
-			'method' => 'view',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomForms',
-			'method' => 'copy',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'updateFieldData',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormsEntries',
-			'method' => 'processEntry',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomForms',
-			'method' => 'add',
-			'name' => 'main',
-			'role' => 'Guest',
-		),
-		array(
-			'objtype' => 'Users',
-			'method' => 'new',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
 			'objtype' => 'CustomForms',
 			'method' => 'val',
 			'name' => 'main',
 			'role' => 'Guest',
 		),
 		array(
-			'objtype' => 'CustomFormsEntries',
+			'objtype' => 'CustomFields',
 			'method' => 'show',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'ContactTypes',
-			'method' => 'new',
-			'name' => 'main',
-			'role' => 'SuperAdmin',
-		),
-		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'deleteField',
 			'name' => 'main',
 			'role' => 'SuperAdmin',
 		),
@@ -785,8 +1060,8 @@ function easycontactforms_install_data() {
 			'role' => 'SuperAdmin',
 		),
 		array(
-			'objtype' => 'CustomFormFields',
-			'method' => 'getSettingsForm',
+			'objtype' => 'Roles',
+			'method' => 'view',
 			'name' => 'main',
 			'role' => 'SuperAdmin',
 		),
@@ -798,8 +1073,320 @@ function easycontactforms_install_data() {
 		),
 		array(
 			'objtype' => 'CustomForms',
+			'method' => 'preview',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Options',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Roles',
 			'method' => 'show',
 			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ProductCategories',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'allowPBLink',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFieldTemplates',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFieldTypes',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFields',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getFormStatistics',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getFormPageStatistics',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'OrderField2',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'installTemplate',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms_MailingLists',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'download',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Templates',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'deletefile',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFieldTypes',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'TaskStatuses',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ProductCategories',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormsEntries',
+			'method' => 'processEntry',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Locales',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Products',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Orders_Products',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactFiles',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'TaskStatuses',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Products',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Roles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactFiles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'moveFieldSet',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getEntryStatistics',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Products',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getUserStatistics',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'TaskTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'installTemplate',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ProductUnitTypes',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactTypes',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getFormStatistics',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'TaskTypes',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'fixOrder',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Tasks',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderField2',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'resetStatistics',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderFiles',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFieldTypes',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Users',
+			'method' => 'getUserASList',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
 			'role' => 'SuperAdmin',
 		),
 		array(
@@ -809,8 +1396,818 @@ function easycontactforms_install_data() {
 			'role' => 'SuperAdmin',
 		),
 		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'getSettingsForm',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'getImage',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'AppTranslations',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Priorities',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'preview',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'moveFieldSet',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFieldTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'updateFieldData',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFieldValues',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'copy',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactFiles',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFields',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'getImage',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFields',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Orders_MailingLists',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactFiles',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Templates',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getUserStatistics',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'deleteField',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ProductCategories',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderFiles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ProductCategories',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getFormPageStatistics',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldTypes',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getEntryStatistics',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactField1',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'copyField',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'getDashboardAPIText',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'allowPBLink',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'DashBoardView',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormsEntries',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactField1',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
 			'objtype' => 'CustomForms',
 			'method' => 'add',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'AppTranslations',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactFiles',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormsEntries',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactField2',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Priorities',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'AppTranslations',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderStatuses',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'refreshForm',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactField2',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'upload',
+			'name' => 'main',
+			'role' => 'Guest',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'add',
+			'name' => 'main',
+			'role' => 'Guest',
+		),
+		array(
+			'objtype' => 'OrderField2',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Priorities',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Tasks_MailingLists',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'TaskStatuses',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ProductUnitTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactFiles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'setFormPageStatisticsShowOnDashboard',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ContactField2',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldValues',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryFiles',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'deleteField',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldValues',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldValues',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'TaskStatuses',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldValues',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'val',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Tasks_MailingLists',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'copy',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'updateFieldData',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormsEntries',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Users',
+			'method' => 'getEUserASList',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFieldValues',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'updateOrder',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'RemoteSites',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryFiles',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Options',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'dismissPointer',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Roles',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Tasks',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryFiles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Templates',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'deletefile',
+			'name' => 'main',
+			'role' => 'Guest',
+		),
+		array(
+			'objtype' => 'Tasks',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'getAvailableTemplates',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Users',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryFiles',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'TaskTypes',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'AppTranslations',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Templates',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'upload',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'OrderField1',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'setOptionValue',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'getAvailableTemplates',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'updateOrder',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldTemplates',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Options',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderFiles',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'resetFormPageStatistics',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFieldTemplates',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'ApplicationSettings',
+			'method' => 'setOptionValue',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Options',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderFiles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'copyField',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Tasks',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Users',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Products',
+			'method' => 'viewDetailed',
+			'name' => 'detailedMain',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Users',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormsEntries',
+			'method' => 'processEntry',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'ContactTypes',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryStatistics',
+			'method' => 'resetFormPageStatistics',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFormFields',
+			'method' => 'addCustomField',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'download',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'download',
+			'name' => 'main',
+			'role' => 'Guest',
+		),
+		array(
+			'objtype' => 'CustomFieldTypes',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomFieldTemplates',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Locales',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders_Products',
+			'method' => 'view',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'OrderFiles',
+			'method' => 'viewDetailed',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Locales',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'Orders',
+			'method' => 'new',
+			'name' => 'main',
+			'role' => 'SuperAdmin',
+		),
+		array(
+			'objtype' => 'CustomFormEntryFiles',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'CustomForms',
+			'method' => 'refreshForm',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'show',
+			'name' => 'main',
+			'role' => 'Owner',
+		),
+		array(
+			'objtype' => 'Files',
+			'method' => 'deletefile',
 			'name' => 'main',
 			'role' => 'SuperAdmin',
 		),
@@ -825,70 +2222,19 @@ function easycontactforms_install_data() {
 
 	$rows = array(
 		array(
-			'id' => 2,
-			'Description' => 'A sample form (please do not use this form. Make a copy)',
-			'NotificationSubject' => 'New request received',
-			'SendFrom' => 'Easy Contact Forms',
-			'SendConfirmation' => 0,
-			'ConfirmationSubject' => 'We have received your request',
-			'ConfirmationText' => 'This is what we received from you:<br /><br />{submission}',
-			'Redirect' => 1,
-			'RedirectURL' => 'http://formsofcontact.com/redirect-page/',
-			'ShortCode' => '[easy_contact_forms fid=2]',
-			'Template' => 0,
-			'SubmissionSuccessText' => 'Thank you for contacting us! We are glad to hear from you.',
-			'HTML' => '<script type=\'text/javascript\'>var ufobaseurl = \'http://localhost/wordpress-3.3/wp-admin/admin-ajax.php\';
-if (typeof(ufoForms) == \'undefined\') {
-	ufoForms = new function() {
-		this.addEvent = function(elem, evType, fn) {
-			if (elem.addEventListener) {
-				elem.addEventListener(evType, fn, false);
-			}
-			else if (elem.attachEvent) {
-				elem.attachEvent(\'on\' + evType, fn);
-			}
-			else {
-				elem[\'on\' + evType] = fn;
-			}
-		}
-		this.docReady = function(func){
-			this.addEvent(document, \'readystatechange\', function(){
-				if (document.readyState == \'complete\'){
-					func();
-				}
-			});
-		}
-
-		this.validate = function (config){
-			this.docReady(function(){ufoForms.addValidation(config)});
-		}
-
-		this.submitButton = function (config){
-			this.docReady(function(){ufoForms.addSubmit(config)});
-		}
-
-		this.resetButton = function (config){
-			this.docReady(function(){ufoForms.addReset(config)});
-		}
-		this.addValidation = function (config){};
-		this.addSubmit = function (config){};
-		this.addReset = function (config){};
-
-	}	
-}</script><link href=\'http://localhost/wordpress-3.3/wp-content/plugins/easy-contact-forms/forms/styles/formsstd/css/std.css\' rel=\'stylesheet\' type=\'text/css\'/>
-<link href=\'http://localhost/wordpress-3.3/wp-content/plugins/easy-contact-forms/forms/styles/formsstd/css/icons.css\' rel=\'stylesheet\' type=\'text/css\'/>
-<style>.ufo-row-644{display:none;}</style><div id=\'ufo-form-id-2\'><noscript><form method=\'POST\'><input type=\'hidden\' name=\'cf-no-script\' value=\'1\'></noscript><input type=\'hidden\' value=\'ufo-form-id-2\' name=\'hidden-2\' id=\'ufo-form-hidden-2\'><input type=\'hidden\' value=\'{ufosignature}\' name=\'ufo-sign\' id=\'ufo-sign\'><div><div class=\'ufo-customfields-container-description\'></div><div class=\'ufo-customform-row ufo-row-627\' style=\'margin-top:2px;{display-627}\'><div class=\'ufo-cell-627-2-row\' id=\'ufo-cell-627-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-627-2-left\'><label for=\'ufo-field-id-627\'  style=\'text-align:left\'>First name<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' id=\'ufo-cell-627-2-center\'><script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required","minmax"]},"Required":true,"Validate":true,"showValid":true,"ValidMessageAbsolutePosition":true,"ValidMessagePosition":"right","RequiredMessage":"Your first name is required (from 2 to 45 characters)","AbsolutePosition":true,"RequiredMessagePosition":"right","min":"2","max":"45","id":"ufo-field-id-627","form":"ufo-form-id-2"});</script><input type=\'text\' id=\'ufo-field-id-627\' value=\'{id-627}\' name=\'id-627\' ></span><span class=\'ufo-cell-right\' id=\'ufo-cell-627-2-right\'><div id=\'ufo-field-id-627-invalid\'  style=\'display:none\'></div><div id=\'ufo-field-id-627-valid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-customform-row ufo-row-644\' style=\'margin-top:2px;{display-644}\'><div class=\'ufo-cell-644-1-row\' id=\'ufo-cell-644-1\'><span class=\'ufo-cell-center\' id=\'ufo-cell-644-1-center\'><label for=\'ufo-field-id-644\'  style=\'text-align:left\'>Middle name</label></span></div><div class=\'ufo-cell-644-2-row\' id=\'ufo-cell-644-2\'><span class=\'ufo-cell-center\' id=\'ufo-cell-644-2-center\'><input type=\'text\' id=\'ufo-field-id-644\' value=\'{id-644}\' name=\'id-644\' ></span></div><div class=\'ufo-cell-644-3-row\' id=\'ufo-cell-644-3\'><span class=\'ufo-cell-center\' id=\'ufo-cell-644-3-center\'><div class=\'ufo-customfields-field-description\'>Please enter your middle name</div></span></div></div><div class=\'ufo-customform-row ufo-row-647\' style=\'margin-top:2px;{display-647}\'><div class=\'ufo-cell-647-2-row\' id=\'ufo-cell-647-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-647-2-left\'><label for=\'ufo-field-id-647\'  style=\'text-align:left\'>Last name<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' id=\'ufo-cell-647-2-center\'><script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required","minmax"]},"Required":true,"Validate":true,"showValid":true,"ValidMessageAbsolutePosition":true,"ValidMessagePosition":"right","RequiredMessage":"Your last name is required (from 2 to 45 characters)","AbsolutePosition":true,"RequiredMessagePosition":"right","min":"2","max":"45","id":"ufo-field-id-647","form":"ufo-form-id-2"});</script><input type=\'text\' id=\'ufo-field-id-647\' value=\'{id-647}\' name=\'id-647\' ></span><span class=\'ufo-cell-right\' id=\'ufo-cell-647-2-right\'><div id=\'ufo-field-id-647-invalid\'  style=\'display:none\'></div><div id=\'ufo-field-id-647-valid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-customform-row ufo-row-625\' style=\'margin-top:2px;{display-625}\'><div class=\'ufo-cell-625-2-row\' id=\'ufo-cell-625-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-625-2-left\'><label for=\'ufo-field-id-625\'  style=\'text-align:left\'>Email<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' id=\'ufo-cell-625-2-center\'><script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required","email"]},"Required":true,"Validate":true,"showValid":true,"ValidMessageAbsolutePosition":true,"ValidMessagePosition":"right","RequiredMessage":"Please enter you email","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-625","form":"ufo-form-id-2"});</script><input type=\'text\' id=\'ufo-field-id-625\' value=\'{id-625}\' name=\'id-625\' ></span><span class=\'ufo-cell-right\' id=\'ufo-cell-625-2-right\'><div id=\'ufo-field-id-625-invalid\'  style=\'display:none\'></div><div id=\'ufo-field-id-625-valid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-customform-row ufo-row-642\' style=\'margin-top:2px;{display-642}\'><div class=\'ufo-cell-642-2-row\' id=\'ufo-cell-642-2\'><span class=\'ufo-cell-left\' id=\'ufo-cell-642-2-left\'><label for=\'ufo-field-id-642\'  style=\'text-align:left\'>Select a product<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-center\' style=\'width:230px\' id=\'ufo-cell-642-2-center\'><script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required"],"change":["required"]},"Required":true,"RequiredMessage":"Please select a product","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-642","form":"ufo-form-id-2"});</script><select id=\'ufo-field-id-642\' value=\'{id-642}\' name=\'id-642\'  style=\'width:230px\'><option value="">Products</option><option value=\'Product 1\'>Product 1</option><option value=\'Product 2\' selected>Product 2</option><option value=\'Product 3\'>Product 3</option></select></span><span class=\'ufo-cell-right\' id=\'ufo-cell-642-2-right\'><div id=\'ufo-field-id-642-invalid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-customform-row ufo-row-648\' style=\'margin-top:2px;{display-648}\'><div class=\'ufo-cell-648-1-row\' id=\'ufo-cell-648-1\'><span class=\'ufo-cell-center\' style=\'width:360px\' id=\'ufo-cell-648-1-center\'><label for=\'ufo-field-id-648\'  style=\'text-align:left\'>Your request<span class=\'ufo-customfields-required-suffix\'>*</span></label></span><span class=\'ufo-cell-right\' id=\'ufo-cell-648-1-right\'><p style=\'display:none\'></p></span></div><div class=\'ufo-cell-648-2-row\' id=\'ufo-cell-648-2\'><span class=\'ufo-cell-center\' style=\'width:360px\' id=\'ufo-cell-648-2-center\'><script type=\'text/javascript\'>ufoForms.validate({"events":{"blur":["required"]},"Required":true,"RequiredMessage":"This field is required","AbsolutePosition":true,"RequiredMessagePosition":"right","id":"ufo-field-id-648","form":"ufo-form-id-2"});</script><textarea id=\'ufo-field-id-648\' name=\'id-648\'  style=\'height:150px;width:360px\'>{id-648}</textarea></span><span class=\'ufo-cell-right\' id=\'ufo-cell-648-2-right\'><div id=\'ufo-field-id-648-invalid\'  style=\'display:none\'></div></span></div></div><div class=\'ufo-customform-row ufo-row-630\' style=\'margin-top:2px;{display-630}\'><div class=\'ufo-cell-630-2-row\' id=\'ufo-cell-630-2\'><span class=\'ufo-cell-center\' id=\'ufo-cell-630-2-center\'><script type=\'text/javascript\'>var c = {};c.id = \'ufo-field-id-630\';c.form = \'ufo-form-id-2\';c.Label = \'Submit\';ufoForms.submitButton(c);</script><span id=\'ufo-field-id-630-span\'><noscript><button type=\'submit\' id=\'ufo-field-id-630\' name=\'id-630\' >Submit</button></noscript></span></span></div></div></div><div id=\'ufo-form-id-2-message\'></div><noscript></form></noscript></div>',
-			'SendFromAddress' => 'noreply@formsofcontac.com',
-			'ShowSubmissionSuccess' => 1,
-			'WidthUnit' => 'px',
-			'LineHeight' => 2,
-			'LineHeightUnit' => 'px',
-			'Style' => 'formsstd',
+			'id' => 1,
+			'Description' => 'Client',
+			'Notes' => 'Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna.',
+		),
+		array(
+			'id' => 4,
+			'Description' => 'Employee',
+			'Notes' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
 		),
 	);
 
-	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_customforms');
-	$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ';' ) );
+	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_contacttypes');
+	$count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table_name . ';' );
 	if ($count == 0) {
 		foreach ($rows as $row) {
 			$wpdb->insert($table_name, $row);
@@ -898,10 +2244,24 @@ if (typeof(ufoForms) == \'undefined\') {
 
 	$rows = array(
 		array(
+			'id' => 1,
+			'Description' => 'Fieldset',
+			'CssClass' => 'ufo-customfield-fieldset',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Fieldset</Label><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>top</DescriptionPosition><DescriptionCSSClass>ufo-customfields-container-description</DescriptionCSSClass><DescriptionCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><AddCF>off</AddCF><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
+			'ListPosition' => 100,
+			'ValueField' => 0,
+		),
+		array(
+			'id' => 2,
+			'Description' => 'Section',
+			'CssClass' => 'ufo-customfield-section',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Section</Label><LabelTagName>h3</LabelTagName><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>top</DescriptionPosition><DescriptionCSSClass>ufo-customfields-container-description</DescriptionCSSClass><DescriptionCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><AddCF>off</AddCF><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
+			'ListPosition' => 200,
+			'ValueField' => 0,
+		),
+		array(
 			'id' => 3,
 			'Description' => 'Select',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setoptions-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setoptions-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setoptions");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetOptions\' value=\'on\' <?php echo $SetOptions == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' checked disabled><label for=\'SetOptions\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetOptions\');?></label></div></div><div id=\'ufo-customform-settings-setoptions\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'HasEmpty\'><?php echo EasyContactFormsT::get(\'CF_HasEmpty\');?></label><input type=\'checkbox\' id=\'HasEmpty\' value=\'<?php echo $HasEmpty == \'on\' ? \'on\' : \'off\';?>\' <?php echo $HasEmpty == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'EmptyOption\'><?php echo EasyContactFormsT::get(\'CF_EmptyOption\');?></label><input type=\'string\' id=\'EmptyOption\' value=\'<?php echo $EmptyOption;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'Options\'><?php echo EasyContactFormsT::get(\'CF_Options\');?></label><div class=\'ufo-customform-fieldform-optionlist\'><?php echo EasyContactFormsCustomFormFields::getSettingsFormOptionList($Options);?></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if ((isset($Required) && $Required == \'on\') && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if ((isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); $config->Required = TRUE; $config->events->blur[] = \'required\'; if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } $config->events->change[] = \'required\'; if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<select id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id ?>}\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><?php if (isset($HasEmpty) && $HasEmpty == \'on\' ) {$eo = isset($EmptyOption) && !empty($EmptyOption) ? $EmptyOption : \'...\';echo \'<option value="">\' . $eo . \'</option>\';}; ?><?php echo EasyContactFormsCustomFormFields::getSelectOptions($id, \'select\'); ?></select>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-select',
 			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Select</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetOptions>on</SetOptions><HasEmpty>off</HasEmpty><EmptyOption/><Options><option index="1">Option1</option><option index="2">Option2</option><option index="3">Option3</option></Options><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
 			'ListPosition' => 800,
@@ -910,512 +2270,117 @@ if (typeof(ufoForms) == \'undefined\') {
 		array(
 			'id' => 4,
 			'Description' => 'Text',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setdefaultvalue-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetDefaultValue\' value=\'<?php echo $SetDefaultValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetDefaultValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetDefaultValue\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetDefaultValue\');?></label></div></div><div id=\'ufo-customform-settings-setdefaultvalue\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValue\'><?php echo EasyContactFormsT::get(\'CF_DefaultValue\');?></label><input type=\'string\' id=\'DefaultValue\' value=\'<?php echo $DefaultValue;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'IsBlankValue\'><?php echo EasyContactFormsT::get(\'CF_IsBlankValue\');?></label><input type=\'checkbox\' id=\'IsBlankValue\' value=\'<?php echo $IsBlankValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $IsBlankValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValueCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DefaultValueCSSClass\');?></label><input type=\'string\' id=\'DefaultValueCSSClass\' value=\'<?php echo $DefaultValueCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-validate-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Validate\' value=\'<?php echo $Validate == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Validate == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Validate\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Validate\');?></label></div></div><div id=\'ufo-customform-settings-validate\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'MinLength\'><?php echo EasyContactFormsT::get(\'CF_MinLength\');?></label><input type=\'string\' id=\'MinLength\' value=\'<?php echo $MinLength;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "MinLength";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'MinLength-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div><label for=\'MaxLength\'><?php echo EasyContactFormsT::get(\'CF_MaxLength\');?></label><input type=\'string\' id=\'MaxLength\' value=\'<?php echo $MaxLength;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "MaxLength";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'MaxLength-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetValidMessage\' value=\'<?php echo $SetValidMessage == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetValidMessage == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetValidMessage\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetValidMessage\');?></label></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessageAbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_ValidMessageAbsolutePosition\');?></label><input type=\'checkbox\' id=\'ValidMessageAbsolutePosition\' value=\'<?php echo $ValidMessageAbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ValidMessageAbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessage\'><?php echo EasyContactFormsT::get(\'CF_ValidMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'ValidMessage\' value=\'<?php echo $ValidMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'ValidMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $ValidMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $ValidMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $ValidMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div><label for=\'ValidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSClass\');?></label><input type=\'string\' id=\'ValidCSSClass\' value=\'<?php echo $ValidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ValidCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSStyle\');?></label><div><textarea id=\'ValidCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $ValidCSSStyle;?></textarea></div></div></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div><div id=\'ufo-customform-settings-setcontactoptions-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setcontactoptions-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setcontactoptions");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetContactOptions\' value=\'<?php echo $SetContactOptions == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetContactOptions == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetContactOptions\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetContactOptions\');?></label></div></div><div id=\'ufo-customform-settings-setcontactoptions\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RegistredUsersOptions\'><?php echo EasyContactFormsT::get(\'CF_RegistredUsersOptions\');?></label><input type=\'hidden\' id=\'RegistredUsersOptions\' value=\'<?php echo $RegistredUsersOptions;?>\' class=\'ufo-formvalue\'><table style=\'border:0;padding:0;border-collapse:collapse;margin:0\'><tr style=\'border:0;margin:0;padding:0\'><td style=\'border:0;margin:0;padding:2px\'><input type=\'radio\' id=\'RegistredUsersOptions-1\' name=\'RegistredUsersOptions\' class=\'ufo-id-link\' style=\'border:0;margin:0;padding:0\' onchange=\'if(this.checked){jQuery("#"+AppMan.Utils.siblingId(this, "RegistredUsersOptions")).val("none")}\' <?php echo $RegistredUsersOptions == \'none\' ? \' checked\' : \'\'; ?>></td><td style=\'border:0;padding:2px;padding-left:5px;margin:0\'><label for=\'RegistredUsersOptions-1\' style=\'border:0;margin:0;padding:0\'><?php echo EasyContactFormsT::get(\'CF_NoActions\');?></label></td></tr><tr style=\'border:0;margin:0;padding:0\'><td style=\'border:0;margin:0;padding:2px\'><input type=\'radio\' id=\'RegistredUsersOptions-2\' name=\'RegistredUsersOptions\' class=\'ufo-id-link\' style=\'border:0;margin:0;padding:0\' onchange=\'if(this.checked){jQuery("#"+AppMan.Utils.siblingId(this, "RegistredUsersOptions")).val("showfill")}\' <?php echo $RegistredUsersOptions == \'showfill\' ? \' checked\' : \'\'; ?>></td><td style=\'border:0;padding:2px;padding-left:5px;margin:0\'><label for=\'RegistredUsersOptions-2\' style=\'border:0;margin:0;padding:0\'><?php echo EasyContactFormsT::get(\'CF_FillWithRegiseredUserData\');?></label></td></tr><tr style=\'border:0;margin:0;padding:0\'><td style=\'border:0;margin:0;padding:2px\'><input type=\'radio\' id=\'RegistredUsersOptions-3\' name=\'RegistredUsersOptions\' class=\'ufo-id-link\' style=\'border:0;margin:0;padding:0\' onchange=\'if(this.checked){jQuery("#"+AppMan.Utils.siblingId(this, "RegistredUsersOptions")).val("hidefilled")}\' <?php echo $RegistredUsersOptions == \'hidefilled\' ? \' checked\' : \'\'; ?>></td><td style=\'border:0;padding:2px;padding-left:5px;margin:0\'><label for=\'RegistredUsersOptions-3\' style=\'border:0;margin:0;padding:0\'><?php echo EasyContactFormsT::get(\'CF_HideFromRegistredUsersWhenFilled\');?></label></td></tr></table></div><div><label for=\'LinkToAppField\'><?php echo EasyContactFormsT::get(\'CF_LinkToAppField\');?></label><select id=\'LinkToAppField\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><?php EasyContactFormsCustomFormFields::getAppFieldList(\'text\', $LinkToAppField, $id, $formid);?></select></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if (((isset($Required) && $Required == \'on\')||(isset($Validate) && $Validate == \'on\')) && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if (isset($Validate) && $Validate == \'on\' && isset($SetValidMessage) && $SetValidMessage == \'on\' && isset($ValidMessage)) { ?><ValidMessage position="<?php if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { echo $ValidMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-valid\' <?php if (isset($ValidCSSClass) && !empty($ValidCSSClass)) {echo "class=\'$ValidCSSClass\'";};?> style=\'<?php if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) {echo trim($ValidCSSStyle, \' ;\') . \';\';};?>display:none\'><?php if (!empty($ValidMessage)) { echo $ValidMessage; } ?></div>]]></ValidMessage><?php } ?><?php if ((isset($Validate) && $Validate == \'on\') || (isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); if (isset($Required) && $Required == \'on\') { $config->Required = TRUE; $config->events->blur[] = \'required\'; } if (isset($Validate) && $Validate == \'on\') { $config->Validate = TRUE; } if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($SetValidMessage) && $SetValidMessage == \'on\') { $config->showValid = TRUE; if (isset($ValidMessageAbsolutePosition) && $ValidMessageAbsolutePosition == \'on\') { $config->ValidMessageAbsolutePosition = TRUE; } if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { $config->ValidMessagePosition = $ValidMessagePosition; } if (isset($ValidCSSClass) && !empty($ValidCSSClass)) { $config->ValidCSSClass = $ValidCSSClass; } if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) { $config->ValidCSSStyle = $ValidCSSStyle; } if (isset($ValidMessage) && !empty($ValidMessage)) { $config->ValidMessage = htmlspecialchars($ValidMessage); } } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (((isset($MinLength) && !empty($MinLength)) || (isset($MaxLength) && !empty($MaxLength))) && isset($Validate) && $Validate == \'on\') { if (isset($MinLength) && !empty($MinLength)) { $config->min = $MinLength; }; if (isset($MaxLength) && !empty($MaxLength)) { $config->max = $MaxLength; }; $config->events->blur[] = \'minmax\'; $config->Validate = TRUE; } if (isset($SetDefaultValue) && $SetDefaultValue == \'on\' && isset($DefaultValue) && !empty($DefaultValue)) { $config->DefaultValue  = $DefaultValue; if (isset($IsBlankValue) && $IsBlankValue == \'on\') { $config->IsBlankValue = TRUE; } if (isset($DefaultValueCSSClass) && !empty($DefaultValueCSSClass)) { $config->DefaultValueCSSClass = $DefaultValueCSSClass; $config->events->blur[] = \'default\'; $config->events->focus[] = \'default\'; } } if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<input type=\'text\' id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id ?>}\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-text',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Text</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><MinLength/><MaxLength/><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit><SetContactOptions>off</SetContactOptions><RegistredUsersOptions>none</RegistredUsersOptions><LinkToAppField>text</LinkToAppField></form>',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Text</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><MinLength/><MaxLength/><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit><SetContactOptions>off</SetContactOptions><RegistredUsersOptions>none</RegistredUsersOptions><LinkToAppField/></form>',
 			'ListPosition' => 300,
 			'ValueField' => 1,
 		),
 		array(
 			'id' => 5,
 			'Description' => 'Email',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setdefaultvalue-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetDefaultValue\' value=\'<?php echo $SetDefaultValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetDefaultValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetDefaultValue\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetDefaultValue\');?></label></div></div><div id=\'ufo-customform-settings-setdefaultvalue\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValue\'><?php echo EasyContactFormsT::get(\'CF_DefaultValue\');?></label><input type=\'string\' id=\'DefaultValue\' value=\'<?php echo $DefaultValue;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'IsBlankValue\'><?php echo EasyContactFormsT::get(\'CF_IsBlankValue\');?></label><input type=\'checkbox\' id=\'IsBlankValue\' value=\'<?php echo $IsBlankValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $IsBlankValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValueCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DefaultValueCSSClass\');?></label><input type=\'string\' id=\'DefaultValueCSSClass\' value=\'<?php echo $DefaultValueCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-validate-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Validate\' value=\'on\' <?php echo $Validate == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' checked disabled><label for=\'Validate\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Validate\');?></label></div></div><div id=\'ufo-customform-settings-validate\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div id=\'ufo-customform-settings-validate-setvalidmessage-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetValidMessage\' value=\'<?php echo $SetValidMessage == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetValidMessage == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetValidMessage\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetValidMessage\');?></label></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessageAbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_ValidMessageAbsolutePosition\');?></label><input type=\'checkbox\' id=\'ValidMessageAbsolutePosition\' value=\'<?php echo $ValidMessageAbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ValidMessageAbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessage\'><?php echo EasyContactFormsT::get(\'CF_ValidMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'ValidMessage\' value=\'<?php echo $ValidMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'ValidMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $ValidMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $ValidMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $ValidMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div><label for=\'ValidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSClass\');?></label><input type=\'string\' id=\'ValidCSSClass\' value=\'<?php echo $ValidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ValidCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSStyle\');?></label><div><textarea id=\'ValidCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $ValidCSSStyle;?></textarea></div></div></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div><div id=\'ufo-customform-settings-setcontactoptions-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setcontactoptions-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setcontactoptions");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetContactOptions\' value=\'<?php echo $SetContactOptions == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetContactOptions == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetContactOptions\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetContactOptions\');?></label></div></div><div id=\'ufo-customform-settings-setcontactoptions\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RegistredUsersOptions\'><?php echo EasyContactFormsT::get(\'CF_RegistredUsersOptions\');?></label><input type=\'hidden\' id=\'RegistredUsersOptions\' value=\'<?php echo $RegistredUsersOptions;?>\' class=\'ufo-formvalue\'><table style=\'border:0;padding:0;border-collapse:collapse;margin:0\'><tr style=\'border:0;margin:0;padding:0\'><td style=\'border:0;margin:0;padding:2px\'><input type=\'radio\' id=\'RegistredUsersOptions-1\' name=\'RegistredUsersOptions\' class=\'ufo-id-link\' style=\'border:0;margin:0;padding:0\' onchange=\'if(this.checked){jQuery("#"+AppMan.Utils.siblingId(this, "RegistredUsersOptions")).val("none")}\' <?php echo $RegistredUsersOptions == \'none\' ? \' checked\' : \'\'; ?>></td><td style=\'border:0;padding:2px;padding-left:5px;margin:0\'><label for=\'RegistredUsersOptions-1\' style=\'border:0;margin:0;padding:0\'><?php echo EasyContactFormsT::get(\'CF_NoActions\');?></label></td></tr><tr style=\'border:0;margin:0;padding:0\'><td style=\'border:0;margin:0;padding:2px\'><input type=\'radio\' id=\'RegistredUsersOptions-2\' name=\'RegistredUsersOptions\' class=\'ufo-id-link\' style=\'border:0;margin:0;padding:0\' onchange=\'if(this.checked){jQuery("#"+AppMan.Utils.siblingId(this, "RegistredUsersOptions")).val("showfill")}\' <?php echo $RegistredUsersOptions == \'showfill\' ? \' checked\' : \'\'; ?>></td><td style=\'border:0;padding:2px;padding-left:5px;margin:0\'><label for=\'RegistredUsersOptions-2\' style=\'border:0;margin:0;padding:0\'><?php echo EasyContactFormsT::get(\'CF_FillWithRegiseredUserData\');?></label></td></tr><tr style=\'border:0;margin:0;padding:0\'><td style=\'border:0;margin:0;padding:2px\'><input type=\'radio\' id=\'RegistredUsersOptions-3\' name=\'RegistredUsersOptions\' class=\'ufo-id-link\' style=\'border:0;margin:0;padding:0\' onchange=\'if(this.checked){jQuery("#"+AppMan.Utils.siblingId(this, "RegistredUsersOptions")).val("hidefilled")}\' <?php echo $RegistredUsersOptions == \'hidefilled\' ? \' checked\' : \'\'; ?>></td><td style=\'border:0;padding:2px;padding-left:5px;margin:0\'><label for=\'RegistredUsersOptions-3\' style=\'border:0;margin:0;padding:0\'><?php echo EasyContactFormsT::get(\'CF_HideFromRegistredUsersWhenFilled\');?></label></td></tr></table></div><div><label for=\'LinkToAppField\'><?php echo EasyContactFormsT::get(\'CF_LinkToAppField\');?></label><select id=\'LinkToAppField\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><?php EasyContactFormsCustomFormFields::getAppFieldList(\'email\', $LinkToAppField, $id, $formid);?></select></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if (((isset($Required) && $Required == \'on\')||(isset($Validate) && $Validate == \'on\')) && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if (isset($Validate) && $Validate == \'on\' && isset($SetValidMessage) && $SetValidMessage == \'on\' && isset($ValidMessage)) { ?><ValidMessage position="<?php if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { echo $ValidMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-valid\' <?php if (isset($ValidCSSClass) && !empty($ValidCSSClass)) {echo "class=\'$ValidCSSClass\'";};?> style=\'<?php if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) {echo trim($ValidCSSStyle, \' ;\') . \';\';};?>display:none\'><?php if (!empty($ValidMessage)) { echo $ValidMessage; } ?></div>]]></ValidMessage><?php } ?><?php if ((isset($Validate) && $Validate == \'on\') || (isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); if (isset($Required) && $Required == \'on\') { $config->Required = TRUE; $config->events->blur[] = \'required\'; } if (isset($Validate) && $Validate == \'on\') { $config->Validate = TRUE; } if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($SetValidMessage) && $SetValidMessage == \'on\') { $config->showValid = TRUE; if (isset($ValidMessageAbsolutePosition) && $ValidMessageAbsolutePosition == \'on\') { $config->ValidMessageAbsolutePosition = TRUE; } if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { $config->ValidMessagePosition = $ValidMessagePosition; } if (isset($ValidCSSClass) && !empty($ValidCSSClass)) { $config->ValidCSSClass = $ValidCSSClass; } if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) { $config->ValidCSSStyle = $ValidCSSStyle; } if (isset($ValidMessage) && !empty($ValidMessage)) { $config->ValidMessage = htmlspecialchars($ValidMessage); } } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (isset($SetDefaultValue) && $SetDefaultValue == \'on\' && isset($DefaultValue) && !empty($DefaultValue)) { $config->DefaultValue  = $DefaultValue; if (isset($IsBlankValue) && $IsBlankValue == \'on\') { $config->IsBlankValue = TRUE; } if (isset($DefaultValueCSSClass) && !empty($DefaultValueCSSClass)) { $config->DefaultValueCSSClass = $DefaultValueCSSClass; $config->events->blur[] = \'default\'; $config->events->focus[] = \'default\'; } } $config->events->blur[] = \'email\'; if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<input type=\'text\' id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id ?>}\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-email',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Email</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue>Your email</DefaultValue><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>on</Required><RequiredMessage>Please enter you email</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>on</Validate><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit><SetContactOptions>off</SetContactOptions><RegistredUsersOptions>none</RegistredUsersOptions><LinkToAppField>email</LinkToAppField></form>',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Email</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue>Your email</DefaultValue><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>on</Required><RequiredMessage>Please enter your email</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>on</Validate><SetValidMessage>on</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit><SetContactOptions>off</SetContactOptions><RegistredUsersOptions>none</RegistredUsersOptions><LinkToAppField/></form>',
 			'ListPosition' => 500,
 			'ValueField' => 1,
 		),
 		array(
 			'id' => 6,
 			'Description' => 'Submit button',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div><label for=\'InputPosition\'><?php echo EasyContactFormsT::get(\'CF_InputPosition\');?></label><select id=\'InputPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'left\' <?php echo $InputPosition == \'left\' ? \' selected\' : \'\';?>>left</option><option value=\'middle\' <?php echo $InputPosition == \'middle\' ? \' selected\' : \'\';?>>middle</option></select></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if(isset($InputPosition) && $InputPosition == \'middle\') { ?><ShowLabel position="left"><![CDATA[<label></label>]]></ShowLabel><?php } ?><Validation><![CDATA[<script type=\'text/javascript\'>var c = {};c.id = \'ufo-field-id-<?php echo $id; ?>\';c.form = \'ufo-form-id-<?php echo $formid; ?>\';<?php if(isset($ShowLabel) && $ShowLabel == \'on\' && isset($Label) && !empty($Label)) {if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "c.LabelCSSClass = \'$LabelCSSClass\';";};if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) {echo "c.LabelCSSStyle = \'$LabelCSSStyle\';";};echo "c.Label = \'$Label\';";};if (isset($CSSClass) && !empty($CSSClass)) {echo "c.CSSClass = \'$CSSClass\';";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit)) {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " c.CSSStyle=\'" . implode(\';\', $style) . "\';";};?>ufoForms.submitButton(c);</script>]]></Validation><Input><![CDATA[<span id=\'ufo-field-id-<?php echo $id; ?>-span\'><noscript><button type=\'submit\' id=\'ufo-field-id-<?php echo $id;?>\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><?php if(isset($ShowLabel) && $ShowLabel == \'on\' && isset($Label)) {if ((isset($LabelCSSClass) && !empty($LabelCSSClass)) || (isset($LabelCSSStyle) && !empty($LabelCSSStyle))) {echo "<span";if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo " class=\'$LabelCSSClass\'";};if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) {echo " style=\'$LabelCSSStyle\'";};echo ">";};echo $Label;if ((isset($LabelCSSClass) && !empty($LabelCSSClass)) || (isset($LabelCSSStyle) && !empty($LabelCSSStyle))) {echo "</span>";};} ?></button></noscript></span>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-submitbutton',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Submit</Label><InputPosition>left</InputPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>100</Width><WidthUnit>px</WidthUnit></form>',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Submit</Label><InputPosition>left</InputPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><WindowScroll/><SetSize>off</SetSize><Width>100</Width><WidthUnit>px</WidthUnit></form>',
 			'ListPosition' => 1300,
 			'ValueField' => 0,
 		),
 		array(
+			'id' => 9,
+			'Description' => 'Checkbox',
+			'CssClass' => 'ufo-customfield-checkbox',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Checkbox</Label><LabelPosition>right-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle>width:200px;</LabelCSSStyle><DisplayValueOn>on</DisplayValueOn><DisplayValueOff>off</DisplayValueOff><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle>width:200px;</RequiredMessageCSSStyle><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>on</SetSize><Width>20</Width><WidthUnit>px</WidthUnit></form>',
+			'ListPosition' => 700,
+			'ValueField' => 1,
+		),
+		array(
 			'id' => 10,
 			'Description' => 'Text Area',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setdefaultvalue-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetDefaultValue\' value=\'<?php echo $SetDefaultValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetDefaultValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetDefaultValue\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetDefaultValue\');?></label></div></div><div id=\'ufo-customform-settings-setdefaultvalue\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValue\'><?php echo EasyContactFormsT::get(\'CF_DefaultValue\');?></label><input type=\'string\' id=\'DefaultValue\' value=\'<?php echo $DefaultValue;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'IsBlankValue\'><?php echo EasyContactFormsT::get(\'CF_IsBlankValue\');?></label><input type=\'checkbox\' id=\'IsBlankValue\' value=\'<?php echo $IsBlankValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $IsBlankValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValueCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DefaultValueCSSClass\');?></label><input type=\'string\' id=\'DefaultValueCSSClass\' value=\'<?php echo $DefaultValueCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-validate-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Validate\' value=\'<?php echo $Validate == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Validate == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Validate\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Validate\');?></label></div></div><div id=\'ufo-customform-settings-validate\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'MinLength\'><?php echo EasyContactFormsT::get(\'CF_MinLength\');?></label><input type=\'string\' id=\'MinLength\' value=\'<?php echo $MinLength;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "MinLength";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'MinLength-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div><label for=\'MaxLength\'><?php echo EasyContactFormsT::get(\'CF_MaxLength\');?></label><input type=\'string\' id=\'MaxLength\' value=\'<?php echo $MaxLength;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "MaxLength";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'MaxLength-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetValidMessage\' value=\'<?php echo $SetValidMessage == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetValidMessage == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetValidMessage\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetValidMessage\');?></label></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessageAbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_ValidMessageAbsolutePosition\');?></label><input type=\'checkbox\' id=\'ValidMessageAbsolutePosition\' value=\'<?php echo $ValidMessageAbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ValidMessageAbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessage\'><?php echo EasyContactFormsT::get(\'CF_ValidMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'ValidMessage\' value=\'<?php echo $ValidMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'ValidMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $ValidMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $ValidMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $ValidMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div><label for=\'ValidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSClass\');?></label><input type=\'string\' id=\'ValidCSSClass\' value=\'<?php echo $ValidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ValidCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSStyle\');?></label><div><textarea id=\'ValidCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $ValidCSSStyle;?></textarea></div></div></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div><label for=\'Height\'><?php echo EasyContactFormsT::get(\'CF_Height\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Height\' value=\'<?php echo $Height;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'HeightUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $HeightUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $HeightUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $HeightUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Height";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Height-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if (((isset($Required) && $Required == \'on\')||(isset($Validate) && $Validate == \'on\')) && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if (isset($Validate) && $Validate == \'on\' && isset($SetValidMessage) && $SetValidMessage == \'on\' && isset($ValidMessage)) { ?><ValidMessage position="<?php if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { echo $ValidMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-valid\' <?php if (isset($ValidCSSClass) && !empty($ValidCSSClass)) {echo "class=\'$ValidCSSClass\'";};?> style=\'<?php if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) {echo trim($ValidCSSStyle, \' ;\') . \';\';};?>display:none\'><?php if (!empty($ValidMessage)) { echo $ValidMessage; } ?></div>]]></ValidMessage><?php } ?><?php if ((isset($Validate) && $Validate == \'on\') || (isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); if (isset($Required) && $Required == \'on\') { $config->Required = TRUE; $config->events->blur[] = \'required\'; } if (isset($Validate) && $Validate == \'on\') { $config->Validate = TRUE; } if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($SetValidMessage) && $SetValidMessage == \'on\') { $config->showValid = TRUE; if (isset($ValidMessageAbsolutePosition) && $ValidMessageAbsolutePosition == \'on\') { $config->ValidMessageAbsolutePosition = TRUE; } if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { $config->ValidMessagePosition = $ValidMessagePosition; } if (isset($ValidCSSClass) && !empty($ValidCSSClass)) { $config->ValidCSSClass = $ValidCSSClass; } if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) { $config->ValidCSSStyle = $ValidCSSStyle; } if (isset($ValidMessage) && !empty($ValidMessage)) { $config->ValidMessage = htmlspecialchars($ValidMessage); } } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (((isset($MinLength) && !empty($MinLength)) || (isset($MaxLength) && !empty($MaxLength))) && isset($Validate) && $Validate == \'on\') { if (isset($MinLength) && !empty($MinLength)) { $config->min = $MinLength; }; if (isset($MaxLength) && !empty($MaxLength)) { $config->max = $MaxLength; }; $config->events->blur[] = \'minmax\'; $config->Validate = TRUE; } if (isset($SetDefaultValue) && $SetDefaultValue == \'on\' && isset($DefaultValue) && !empty($DefaultValue)) { $config->DefaultValue  = $DefaultValue; if (isset($IsBlankValue) && $IsBlankValue == \'on\') { $config->IsBlankValue = TRUE; } if (isset($DefaultValueCSSClass) && !empty($DefaultValueCSSClass)) { $config->DefaultValueCSSClass = $DefaultValueCSSClass; $config->events->blur[] = \'default\'; $config->events->focus[] = \'default\'; } } if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<textarea id=\'ufo-field-id-<?php echo $id;?>\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Height) && !empty($Height) && isset($HeightUnit) && $HeightUnit == \'chars\') {echo "size=\'$Height\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Height) && !empty($Height) && isset($HeightUnit) && !empty($HeightUnit) && $HeightUnit != \'chars\') {$style[] = "height:{$Height}{$HeightUnit}";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>>{id-<?php echo $id;?>}</textarea>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-textarea',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Text Area</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><MinLength/><MaxLength/><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit><Height>100</Height><HeightUnit>px</HeightUnit></form>',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Text Area</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><MinLength/><MaxLength/><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>on</SetSize><Width>230</Width><WidthUnit>px</WidthUnit><Height>100</Height><HeightUnit>px</HeightUnit></form>',
 			'ListPosition' => 400,
 			'ValueField' => 1,
 		),
 		array(
 			'id' => 11,
 			'Description' => 'Number',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setdefaultvalue-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetDefaultValue\' value=\'<?php echo $SetDefaultValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetDefaultValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetDefaultValue\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetDefaultValue\');?></label></div></div><div id=\'ufo-customform-settings-setdefaultvalue\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValue\'><?php echo EasyContactFormsT::get(\'CF_DefaultValue\');?></label><input type=\'string\' id=\'DefaultValue\' value=\'<?php echo $DefaultValue;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'IsBlankValue\'><?php echo EasyContactFormsT::get(\'CF_IsBlankValue\');?></label><input type=\'checkbox\' id=\'IsBlankValue\' value=\'<?php echo $IsBlankValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $IsBlankValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValueCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DefaultValueCSSClass\');?></label><input type=\'string\' id=\'DefaultValueCSSClass\' value=\'<?php echo $DefaultValueCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-validate-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Validate\' value=\'on\' <?php echo $Validate == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' checked disabled><label for=\'Validate\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Validate\');?></label></div></div><div id=\'ufo-customform-settings-validate\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div id=\'ufo-customform-settings-validate-setvalidmessage-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetValidMessage\' value=\'<?php echo $SetValidMessage == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetValidMessage == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetValidMessage\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetValidMessage\');?></label></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessageAbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_ValidMessageAbsolutePosition\');?></label><input type=\'checkbox\' id=\'ValidMessageAbsolutePosition\' value=\'<?php echo $ValidMessageAbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ValidMessageAbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessage\'><?php echo EasyContactFormsT::get(\'CF_ValidMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'ValidMessage\' value=\'<?php echo $ValidMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'ValidMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $ValidMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $ValidMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $ValidMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div><label for=\'ValidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSClass\');?></label><input type=\'string\' id=\'ValidCSSClass\' value=\'<?php echo $ValidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ValidCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSStyle\');?></label><div><textarea id=\'ValidCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $ValidCSSStyle;?></textarea></div></div></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if (((isset($Required) && $Required == \'on\')||(isset($Validate) && $Validate == \'on\')) && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if (isset($Validate) && $Validate == \'on\' && isset($SetValidMessage) && $SetValidMessage == \'on\' && isset($ValidMessage)) { ?><ValidMessage position="<?php if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { echo $ValidMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-valid\' <?php if (isset($ValidCSSClass) && !empty($ValidCSSClass)) {echo "class=\'$ValidCSSClass\'";};?> style=\'<?php if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) {echo trim($ValidCSSStyle, \' ;\') . \';\';};?>display:none\'><?php if (!empty($ValidMessage)) { echo $ValidMessage; } ?></div>]]></ValidMessage><?php } ?><?php if ((isset($Validate) && $Validate == \'on\') || (isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); if (isset($Required) && $Required == \'on\') { $config->Required = TRUE; $config->events->blur[] = \'required\'; } if (isset($Validate) && $Validate == \'on\') { $config->Validate = TRUE; } if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($SetValidMessage) && $SetValidMessage == \'on\') { $config->showValid = TRUE; if (isset($ValidMessageAbsolutePosition) && $ValidMessageAbsolutePosition == \'on\') { $config->ValidMessageAbsolutePosition = TRUE; } if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { $config->ValidMessagePosition = $ValidMessagePosition; } if (isset($ValidCSSClass) && !empty($ValidCSSClass)) { $config->ValidCSSClass = $ValidCSSClass; } if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) { $config->ValidCSSStyle = $ValidCSSStyle; } if (isset($ValidMessage) && !empty($ValidMessage)) { $config->ValidMessage = htmlspecialchars($ValidMessage); } } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (isset($SetDefaultValue) && $SetDefaultValue == \'on\' && isset($DefaultValue) && !empty($DefaultValue)) { $config->DefaultValue  = $DefaultValue; if (isset($IsBlankValue) && $IsBlankValue == \'on\') { $config->IsBlankValue = TRUE; } if (isset($DefaultValueCSSClass) && !empty($DefaultValueCSSClass)) { $config->DefaultValueCSSClass = $DefaultValueCSSClass; $config->events->blur[] = \'default\'; $config->events->focus[] = \'default\'; } } $config->events->blur[] = \'numeric\'; if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<input type=\'text\' id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id ?>}\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-number',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Number</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>on</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>on</Validate><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Number</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>on</Required><RequiredMessage>Please enter a valid number</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>on</Validate><SetValidMessage>on</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
 			'ListPosition' => 600,
 			'ValueField' => 1,
 		),
 		array(
 			'id' => 12,
 			'Description' => 'Radio Group',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setoptions-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setoptions-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setoptions");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetOptions\' value=\'on\' <?php echo $SetOptions == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' checked disabled><label for=\'SetOptions\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetOptions\');?></label></div></div><div id=\'ufo-customform-settings-setoptions\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Options\'><?php echo EasyContactFormsT::get(\'CF_Options\');?></label><div class=\'ufo-customform-fieldform-optionlist\'><?php echo EasyContactFormsCustomFormFields::getSettingsFormOptionList($Options);?></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if ((isset($Required) && $Required == \'on\') && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if ((isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); $config->Required = TRUE; $config->events->blur[] = \'required\'; if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<div <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><input type=\'hidden\' id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id ?>}\' class=\'ufo-hidden\'><?php echo EasyContactFormsCustomFormFields::getSelectOptions($id, \'radiogroup\'); ?></div><div style=\'clear:both\'></div>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-radiogroup',
 			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Radio Group</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetOptions>on</SetOptions><Options><option index="1">Option1</option><option index="2">Option2</option><option index="3">Option3</option></Options><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><SetStyle>on</SetStyle><CSSClass/><CSSStyle>float:left</CSSStyle><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
 			'ListPosition' => 900,
 			'ValueField' => 1,
 		),
 		array(
-			'id' => 9,
-			'Description' => 'Checkbox',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if ((isset($Required) && $Required == \'on\') && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if ((isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); $config->Required = TRUE; $config->events->blur[] = \'required\'; if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } $config->events->change[] = \'required\'; if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<div value=\'{id-<?php echo $id ?>}\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><input type=\'checkbox\' id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id;?>}\' name=\'id-<?php echo $id;?>\' class=\'ufo-cb\' style=\'width:20px\' onchange=\'this.value=(this.checked)?"on":"off";\'></div>]]></Input></field>',
-			'CssClass' => 'ufo-customfield-checkbox',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Checkbox</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
-			'Processor' => '<?php switch ($phase->index) { case 6: $on = isset($map[\'cf-no-script\']) ? !is_null($value) : $value == \'on\'; $value = $on ? 1 : 0; $displayvalue = $on ? \'on\' : \'off\'; break; case 5: $on = isset($varmap[\'cf-no-script\']) ? isset($varmap[\'id-\' . $fldid]) : isset($varmap[\'id-\' . $fldid]) && $varmap[\'id-\' . $fldid] == \'on\'; if ($on) { $valid = TRUE; $varmap[\'id-\' . $fldid] = "on\' checked title=\'"; } break; case 7: $on = isset($varmap[\'cf-no-script\']) ? isset($varmap[\'id-\' . $fldid]) : isset($varmap[\'id-\' . $fldid]) && $varmap[\'id-\' . $fldid] == \'on\'; if ($on) { $varmap[\'id-\' . $fldid] = "on\' checked title=\'"; } break; } ?>',
-			'ListPosition' => 700,
-			'ValueField' => 1,
-		),
-		array(
 			'id' => 13,
 			'Description' => 'reCaptcha',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'on\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' checked disabled><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-validate-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Validate\' value=\'<?php echo $Validate == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Validate == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Validate\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Validate\');?></label></div></div><div id=\'ufo-customform-settings-validate\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div id=\'ufo-customform-settings-validate-setvalidmessage-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetValidMessage\' value=\'<?php echo $SetValidMessage == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetValidMessage == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetValidMessage\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetValidMessage\');?></label></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessageAbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_ValidMessageAbsolutePosition\');?></label><input type=\'checkbox\' id=\'ValidMessageAbsolutePosition\' value=\'<?php echo $ValidMessageAbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ValidMessageAbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessage\'><?php echo EasyContactFormsT::get(\'CF_ValidMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'ValidMessage\' value=\'<?php echo $ValidMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'ValidMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $ValidMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $ValidMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $ValidMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div><label for=\'ValidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSClass\');?></label><input type=\'string\' id=\'ValidCSSClass\' value=\'<?php echo $ValidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ValidCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSStyle\');?></label><div><textarea id=\'ValidCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $ValidCSSStyle;?></textarea></div></div></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div><div id=\'ufo-customform-settings-setrecaptchaoptions-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setrecaptchaoptions-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setrecaptchaoptions");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetReCaptchaOptions\' value=\'<?php echo $SetReCaptchaOptions == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetReCaptchaOptions == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetReCaptchaOptions\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetReCaptchaOptions\');?></label></div></div><div id=\'ufo-customform-settings-setrecaptchaoptions\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ReCaptchaTheme\'><?php echo EasyContactFormsT::get(\'CF_ReCaptchaTheme\');?></label><select id=\'ReCaptchaTheme\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'red\' <?php echo $ReCaptchaTheme == \'red\' ? \' selected\' : \'\';?>><?php echo EasyContactFormsT::get(\'CF_ReCaptchaThemeRed\');?></option><option value=\'white\' <?php echo $ReCaptchaTheme == \'white\' ? \' selected\' : \'\';?>><?php echo EasyContactFormsT::get(\'CF_ReCaptchaThemeWhite\');?></option><option value=\'blackglass\' <?php echo $ReCaptchaTheme == \'blackglass\' ? \' selected\' : \'\';?>><?php echo EasyContactFormsT::get(\'CF_ReCaptchaThemeBlackglass\');?></option><option value=\'clean\' <?php echo $ReCaptchaTheme == \'clean\' ? \' selected\' : \'\';?>><?php echo EasyContactFormsT::get(\'CF_ReCaptchaThemeClean\');?></option></select></div><div><label for=\'ReCaptchaLanguage\'><?php echo EasyContactFormsT::get(\'CF_ReCaptchaLanguage\');?></label><select id=\'ReCaptchaLanguage\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option <?php echo $ReCaptchaLanguage == \'\' ? \' selected\' : \'\';?>>...</option><option value=\'en\' <?php echo $ReCaptchaLanguage == \'en\' ? \' selected\' : \'\';?>>English</option><option value=\'nl\' <?php echo $ReCaptchaLanguage == \'nl\' ? \' selected\' : \'\';?>>Dutch</option><option value=\'fr\' <?php echo $ReCaptchaLanguage == \'fr\' ? \' selected\' : \'\';?>>French</option><option value=\'de\' <?php echo $ReCaptchaLanguage == \'de\' ? \' selected\' : \'\';?>>German</option><option value=\'pt\' <?php echo $ReCaptchaLanguage == \'pt\' ? \' selected\' : \'\';?>>Portuguese</option><option value=\'ru\' <?php echo $ReCaptchaLanguage == \'ru\' ? \' selected\' : \'\';?>>Russian</option><option value=\'es\' <?php echo $ReCaptchaLanguage == \'es\' ? \' selected\' : \'\';?>>Spanish</option><option value=\'tr\' <?php echo $ReCaptchaLanguage == \'tr\' ? \' selected\' : \'\';?>>Turkish</option></select></div><div><label for=\'ReCaptchaPrivateKey\'><?php echo EasyContactFormsT::get(\'CF_ReCaptchaPrivateKey\');?></label><input type=\'string\' id=\'ReCaptchaPrivateKey\' value=\'<?php echo $ReCaptchaPrivateKey;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ReCaptchaPublicKey\'><?php echo EasyContactFormsT::get(\'CF_ReCaptchaPublicKey\');?></label><input type=\'string\' id=\'ReCaptchaPublicKey\' value=\'<?php echo $ReCaptchaPublicKey;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if (((isset($Required) && $Required == \'on\')||(isset($Validate) && $Validate == \'on\')) && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if (isset($Validate) && $Validate == \'on\' && isset($SetValidMessage) && $SetValidMessage == \'on\' && isset($ValidMessage)) { ?><ValidMessage position="<?php if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { echo $ValidMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-valid\' <?php if (isset($ValidCSSClass) && !empty($ValidCSSClass)) {echo "class=\'$ValidCSSClass\'";};?> style=\'<?php if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) {echo trim($ValidCSSStyle, \' ;\') . \';\';};?>display:none\'><?php if (!empty($ValidMessage)) { echo $ValidMessage; } ?></div>]]></ValidMessage><?php } ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); $config->events->blur[] = \'recaptcharequired\'; $config->Required = TRUE; if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($SetValidMessage) && $SetValidMessage == \'on\') { $config->showValid = TRUE; if (isset($ValidMessageAbsolutePosition) && $ValidMessageAbsolutePosition == \'on\') { $config->ValidMessageAbsolutePosition = TRUE; } if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { $config->ValidMessagePosition = $ValidMessagePosition; } if (isset($ValidCSSClass) && !empty($ValidCSSClass)) { $config->ValidCSSClass = $ValidCSSClass; } if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) { $config->ValidCSSStyle = $ValidCSSStyle; } if (isset($ValidMessage) && !empty($ValidMessage)) { $config->ValidMessage = htmlspecialchars($ValidMessage); } } $config->rcparams = (object) array(); if (isset($ReCaptchaLanguage) && !empty($ReCaptchaLanguage)) { $config->rcparams->lang = $ReCaptchaLanguage; } if (isset($ReCaptchaTheme) && !empty($ReCaptchaTheme)) { $config->rcparams->theme = $ReCaptchaTheme; } $config->pbk = $ReCaptchaPublicKey; $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; ?>]]></Validation><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<div <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><?php if (isset($ReCaptchaPublicKey) && !empty($ReCaptchaPublicKey)) { ?><input type=\'hidden\' id=\'ufo-field-id-<?php echo $id; ?>-sid\' value=\'{id-<?php echo $id;?>}\' name=\'sid\'><div id=\'ufo-field-id-<?php echo $id;?>\'></div><script type=\'text/javascript\' src=\'http://www.google.com/recaptcha/api/js/recaptcha_ajax.js\'></script><script type=\'text/javascript\'><?php $jsc = \'\';$c = (object) array();if (isset($ReCaptchaLanguage) && !empty($ReCaptchaLanguage)) {	$c->lang = $ReCaptchaLanguage;}if (isset($ReCaptchaTheme) && !empty($ReCaptchaTheme)) {	$c->theme = $ReCaptchaTheme;}if (count( (array)$c) > 0) {$jsc = \', \' . json_encode($c);};?>Recaptcha.create("<?php echo $ReCaptchaPublicKey;?>", \'ufo-field-id-<?php echo $id;?>\'<?php echo $jsc;?>);</script><noscript><iframe src=\'http://www.google.com/recaptcha/api/noscript?k=<?php echo $ReCaptchaPublicKey;?>\' height=\'300\' width=\'500\'></iframe><br /><textarea name=\'recaptcha_challenge_field\' rows=\'3\' cols=\'40\'></textarea><input type=\'hidden\' value=\'manual_challenge\' name=\'recaptcha_response_field\'></noscript><?php } ?></div>]]></Input></field>',
 			'CssClass' => 'ufo-customfield-recaptcha',
-			'Settings' => '<form><ShowLabel>off</ShowLabel><Label>ReCaptcha</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><Required>off</Required><RequiredMessage>Please try again</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass>none</InvalidCSSClass><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><SetValidMessage>on</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>on</SetSize><Width>500</Width><WidthUnit>px</WidthUnit><SetReCaptchaOptions>off</SetReCaptchaOptions><ReCaptchaTheme>red</ReCaptchaTheme><ReCaptchaLanguage/><ReCaptchaPrivateKey/><ReCaptchaPublicKey/></form>',
-			'Processor' => '<?php switch ($phase->index) { case 4: $cxml = simplexml_load_string($fld->get(\'Settings\')); if (!isset($pvk)) { $pvk = (string) $cxml->ReCaptchaPrivateKey; } $pbk = (string) $cxml->ReCaptchaPublicKey; $valid = FALSE; if (!empty($pbk) && !empty($pvk) && isset($_POST[\'recaptcha_response_field\'])) { require_once _EASYCONTACTFORMS_PLUGIN_PATH . WP_DS . \'forms\' . WP_DS . \'recaptchalib.php\'; $resp = recaptcha_check_answer($pvk, $_SERVER[\'REMOTE_ADDR\'], $_POST[\'recaptcha_challenge_field\'], $_POST[\'recaptcha_response_field\']); $valid = $resp->is_valid; } if ($valid) { EasyContactFormsSecurityManager::setSessionValue(\'ufo_forms_recaptcha\', \'TRUE\', $map); echo \'true\'; } else { EasyContactFormsSecurityManager::setSessionValue(\'ufo_forms_recaptcha\', \'FALSE\', $map); echo \'false\'; } break; case 3: $pbk = (string) $xml->ReCaptchaPublicKey; if (!empty($pbk)) { $sid = EasyContactFormsSecurityManager::setSessionValue(\'ufo_forms_recaptcha\', \'FALSE\'); $varmap[\'id-\' . $fldid] = $sid; } break; case 8: $vjs[] = "if (typeof(ufoValidators) == \'undefined\') { ufoValidators = {}; }; ufoValidators.recaptcharequired = function(config, evt){ var submits = ufoForms.submits[config.form]; var setkeypress = function() { var respel = ufoForms.get(\'recaptcha_response_field\'); ufoForms.addEvent(respel, \'keypress\', function(){ for (var i = 0; i < submits.length; i++) { submits[i].disabled = false; } ufoForms.fieldReset(config); config.isvalid = true; ufoForms.validateForm(config.form); }); }; var respel = ufoForms.get(\'recaptcha_response_field\'); if (!config.reselblur) { config.reselblur = true; setkeypress(); } if (respel.value == \'\') { return false; } if (config.validCaptha == true) { return true; } for (var i = 0; i < submits.length; i++) { ufoForms.addClass(submits[i].domEl, \'ufo-loading\'); submits[i].disabled = true; } ufoForms.fieldReset(config); var callback = function(){}; var chlel = ufoForms.get(\'recaptcha_challenge_field\'); var values = []; var id = config.id.split(\'-\'); id = id[id.length - 2] + \'-\' + id[id.length - 1]; values.push(id+\'=1\'); var hidden = ufoForms.get(config.id+\'-sid\'); values.push(\'sid=\'+hidden.value); values.push(\'recaptcha_challenge_field=\'+chlel.value); values.push(\'recaptcha_response_field=\'+respel.value); values = values.join(\'&\'); ufoForms.request(values, callback, \'val\', false); var result = (uhxr.responseText == \'true\'); config.validCaptha = result; if (!result) { var rcdiv = ufoForms.get(config.id); rcdiv.style.height = rcdiv.offsetHeight+\'px\'; config.rcparams.callback = setkeypress; Recaptcha.create(config.pbk, config.id, config.rcparams); config.reselblur = false; } for (var i = 0; i < submits.length; i++) { ufoForms.removeClass(submits[i].domEl, \'ufo-loading\'); submits[i].disabled = false; } return result; };"; break; case 5: $cxml = simplexml_load_string($fld->get(\'Settings\')); if (!isset($pvk)) { $pvk = (string) $cxml->ReCaptchaPrivateKey; } $pbk = (string) $cxml->ReCaptchaPublicKey; $jssid = $fld->get(\'id\') . \'-sid\'; if (isset($varmap[$jssid])) { $varmap[\'sid\'] = $varmap[$jssid]; } $str = EasyContactFormsSecurityManager::getGetSessionValue($varmap, \'ufo_forms_recaptcha\'); $valid = $str == \'TRUE\'; if (!$valid && !empty($pbk) && !empty($pvk) && isset($_POST[\'recaptcha_response_field\'])) { require_once _EASYCONTACTFORMS_PLUGIN_PATH . WP_DS . \'forms\' . WP_DS . \'recaptchalib.php\'; $resp = recaptcha_check_answer($pvk, $_SERVER[\'REMOTE_ADDR\'], $_POST[\'recaptcha_challenge_field\'], $_POST[\'recaptcha_response_field\']); $valid = $resp->is_valid; if (!$valid) { $this->sendBack = TRUE; if (!isset($this->errors)) { $this->errors = array(); } $this->errors[$fld->get(\'Description\')] = $resp->error; } $varmap[\'id-\' . $fldid] = $varmap[\'sid\']; } else if (!$valid) { $this->processInvalid($fld, \'recaptcha\', $config); $varmap[\'id-\' . $fldid] = \'\'; } break; } ?>',
+			'Settings' => '<form><ShowLabel>off</ShowLabel><Label>ReCaptcha</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><Required>off</Required><RequiredMessage>Please try again</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass>none</InvalidCSSClass><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><SetValidMessage>on</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>on</SetSize><Width>500</Width><WidthUnit>px</WidthUnit><SetReCaptchaOptions>off</SetReCaptchaOptions><ReCaptchaTheme>red</ReCaptchaTheme><ReCaptchaLanguage/><ReCaptchaPublicKey/><ReCaptchaPrivateKey/></form>',
 			'ListPosition' => 1100,
 			'ValueField' => 0,
 		),
 		array(
 			'id' => 14,
-			'Description' => 'Agent',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top-align-left\' <?php echo $LabelPosition == \'top-align-left\' ? \' selected\' : \'\';?>>top-align-left</option><option value=\'top-align-right\' <?php echo $LabelPosition == \'top-align-right\' ? \' selected\' : \'\';?>>top-align-right</option><option value=\'left-align-left\' <?php echo $LabelPosition == \'left-align-left\' ? \' selected\' : \'\';?>>left-align-left</option><option value=\'left-align-right\' <?php echo $LabelPosition == \'left-align-right\' ? \' selected\' : \'\';?>>left-align-right</option><option value=\'right-align-left\' <?php echo $LabelPosition == \'right-align-left\' ? \' selected\' : \'\';?>>right-align-left</option><option value=\'right-align-right\' <?php echo $LabelPosition == \'right-align-right\' ? \' selected\' : \'\';?>>right-align-right</option><option value=\'bottom-align-left\' <?php echo $LabelPosition == \'bottom-align-left\' ? \' selected\' : \'\';?>>bottom-align-left</option><option value=\'bottom-align-right\' <?php echo $LabelPosition == \'bottom-align-right\' ? \' selected\' : \'\';?>>bottom-align-right</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $DescriptionPosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setdefaultvalue-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetDefaultValue\' value=\'<?php echo $SetDefaultValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetDefaultValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetDefaultValue\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetDefaultValue\');?></label></div></div><div id=\'ufo-customform-settings-setdefaultvalue\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValue\'><?php echo EasyContactFormsT::get(\'CF_DefaultValue\');?></label><input type=\'string\' id=\'DefaultValue\' value=\'<?php echo $DefaultValue;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'IsBlankValue\'><?php echo EasyContactFormsT::get(\'CF_IsBlankValue\');?></label><input type=\'checkbox\' id=\'IsBlankValue\' value=\'<?php echo $IsBlankValue == \'on\' ? \'on\' : \'off\';?>\' <?php echo $IsBlankValue == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setdefaultvalue-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setdefaultvalue-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setdefaultvalue-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DefaultValueCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DefaultValueCSSClass\');?></label><input type=\'string\' id=\'DefaultValueCSSClass\' value=\'<?php echo $DefaultValueCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-required-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Required\' value=\'<?php echo $Required == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Required == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Required\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Required\');?></label></div></div><div id=\'ufo-customform-settings-required\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredMessage\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'RequiredMessage\' value=\'<?php echo $RequiredMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'RequiredMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $RequiredMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $RequiredMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $RequiredMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetRequiredSuffix\' value=\'<?php echo $SetRequiredSuffix == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetRequiredSuffix == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetRequiredSuffix\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetRequiredSuffix\');?></label></div></div><div id=\'ufo-customform-settings-required-setrequiredsuffix\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffix\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffix\');?></label><input type=\'string\' id=\'RequiredSuffix\' value=\'<?php echo $RequiredSuffix;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-setrequiredsuffix-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-setrequiredsuffix-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-setrequiredsuffix-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RequiredSuffixCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSClass\');?></label><input type=\'string\' id=\'RequiredSuffixCSSClass\' value=\'<?php echo $RequiredSuffixCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredSuffixCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredSuffixCSSStyle\');?></label><div><textarea id=\'RequiredSuffixCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredSuffixCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-required-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-required-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-required-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-required-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'AbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_AbsolutePosition\');?></label><input type=\'checkbox\' id=\'AbsolutePosition\' value=\'<?php echo $AbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $AbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div><label for=\'InvalidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_InvalidCSSClass\');?></label><input type=\'string\' id=\'InvalidCSSClass\' value=\'<?php echo $InvalidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSClass\');?></label><input type=\'string\' id=\'RequiredMessageCSSClass\' value=\'<?php echo $RequiredMessageCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'RequiredMessageCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_RequiredMessageCSSStyle\');?></label><div><textarea id=\'RequiredMessageCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $RequiredMessageCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-validate-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'Validate\' value=\'<?php echo $Validate == \'on\' ? \'on\' : \'off\';?>\' <?php echo $Validate == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'Validate\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_Validate\');?></label></div></div><div id=\'ufo-customform-settings-validate\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'MinLength\'><?php echo EasyContactFormsT::get(\'CF_MinLength\');?></label><input type=\'string\' id=\'MinLength\' value=\'<?php echo $MinLength;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "MinLength";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'MinLength-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div><label for=\'MaxLength\'><?php echo EasyContactFormsT::get(\'CF_MaxLength\');?></label><input type=\'string\' id=\'MaxLength\' value=\'<?php echo $MaxLength;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "MaxLength";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'MaxLength-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetValidMessage\' value=\'<?php echo $SetValidMessage == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetValidMessage == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetValidMessage\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetValidMessage\');?></label></div></div><div id=\'ufo-customform-settings-validate-setvalidmessage\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessageAbsolutePosition\'><?php echo EasyContactFormsT::get(\'CF_ValidMessageAbsolutePosition\');?></label><input type=\'checkbox\' id=\'ValidMessageAbsolutePosition\' value=\'<?php echo $ValidMessageAbsolutePosition == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ValidMessageAbsolutePosition == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-validate-setvalidmessage-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-validate-setvalidmessage-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-validate-setvalidmessage-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'ValidMessage\'><?php echo EasyContactFormsT::get(\'CF_ValidMessage\');?></label><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'ValidMessage\' value=\'<?php echo $ValidMessage;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'ValidMessagePosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'top\' <?php echo $ValidMessagePosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'right\' <?php echo $ValidMessagePosition == \'right\' ? \' selected\' : \'\';?>>right</option><option value=\'bottom\' <?php echo $ValidMessagePosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option></select></div><div style=\'clear:left\'></div></div><div><label for=\'ValidCSSClass\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSClass\');?></label><input type=\'string\' id=\'ValidCSSClass\' value=\'<?php echo $ValidCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'ValidCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_ValidCSSStyle\');?></label><div><textarea id=\'ValidCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $ValidCSSStyle;?></textarea></div></div></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div><div id=\'ufo-customform-settings-setstyle-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-setstyle-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'RowCSSClass\'><?php echo EasyContactFormsT::get(\'CF_RowCSSClass\');?></label><input type=\'string\' id=\'RowCSSClass\' value=\'<?php echo $RowCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><ShowLabel position="<?php if (isset($LabelPosition) && !empty($LabelPosition)) { $position = explode(\'-\', $LabelPosition); $position = $position[0]; echo $position; } else {echo \'left\';} ?>"><![CDATA[<label for=\'ufo-field-id-<?php echo $id;?>\' <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";}; if (isset($LabelPosition)) { $style = array(); $align = explode(\'-\',$LabelPosition); $align = $align[count($align)-1]; $style[] = "text-align:$align"; }; if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) { $style = array(); $style[] = $LabelCSSStyle; }; if (count($style) > 0) {echo " style=\'". implode(\';\',$style). "\'";}; ?>><?php echo $Label;if(isset($Required) && $Required == \'on\' && isset($SetRequiredSuffix) && $SetRequiredSuffix == \'on\' && isset($RequiredSuffix) && !empty($RequiredSuffix)) {?><span <?php if (isset($RequiredSuffixCSSClass) && !empty($RequiredSuffixCSSClass)) {echo "class=\'$RequiredSuffixCSSClass\'";}; if (isset($RequiredSuffixCSSStyle) && !empty($RequiredSuffixCSSStyle)) {echo " style=\'$RequiredSuffixCSSStyle\'";}; ?>><?php echo $RequiredSuffix; ?></span><?php }?></label>]]></ShowLabel><?php } ?><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'bottom\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><?php if (((isset($Required) && $Required == \'on\')||(isset($Validate) && $Validate == \'on\')) && isset($RequiredMessage) && !empty($RequiredMessage)) { ?><RequiredMessage position="<?php if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { echo $RequiredMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-invalid\' <?php if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) {echo "class=\'$RequiredMessageCSSClass\'";};?> style=\'<?php if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) {echo trim($RequiredMessageCSSStyle, \' ;\') . \';\';};?>display:none\'></div>]]></RequiredMessage><?php } ?><?php if (isset($Validate) && $Validate == \'on\' && isset($SetValidMessage) && $SetValidMessage == \'on\' && isset($ValidMessage)) { ?><ValidMessage position="<?php if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { echo $ValidMessagePosition; } else {echo \'right\';} ?>"><![CDATA[<div id=\'ufo-field-id-<?php echo $id;?>-valid\' <?php if (isset($ValidCSSClass) && !empty($ValidCSSClass)) {echo "class=\'$ValidCSSClass\'";};?> style=\'<?php if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) {echo trim($ValidCSSStyle, \' ;\') . \';\';};?>display:none\'><?php if (!empty($ValidMessage)) { echo $ValidMessage; } ?></div>]]></ValidMessage><?php } ?><?php if ((isset($Validate) && $Validate == \'on\') || (isset($Required) && $Required == \'on\')) { ?><Validation><![CDATA[<?php $config = (object) array(); $config->events = (object) array(); if (isset($Required) && $Required == \'on\') { $config->Required = TRUE; $config->events->blur[] = \'required\'; } if (isset($Validate) && $Validate == \'on\') { $config->Validate = TRUE; } if (isset($InvalidCSSClass) && !empty($InvalidCSSClass)) { $config->InvalidCSSClass = $InvalidCSSClass; } if (isset($SetValidMessage) && $SetValidMessage == \'on\') { $config->showValid = TRUE; if (isset($ValidMessageAbsolutePosition) && $ValidMessageAbsolutePosition == \'on\') { $config->ValidMessageAbsolutePosition = TRUE; } if (isset($ValidMessagePosition) && !empty($ValidMessagePosition)) { $config->ValidMessagePosition = $ValidMessagePosition; } if (isset($ValidCSSClass) && !empty($ValidCSSClass)) { $config->ValidCSSClass = $ValidCSSClass; } if (isset($ValidCSSStyle) && !empty($ValidCSSStyle)) { $config->ValidCSSStyle = $ValidCSSStyle; } if (isset($ValidMessage) && !empty($ValidMessage)) { $config->ValidMessage = htmlspecialchars($ValidMessage); } } if (isset($RequiredMessage) && !empty($RequiredMessage)) { $config->RequiredMessage = htmlspecialchars($RequiredMessage); } if (isset($AbsolutePosition) && $AbsolutePosition == \'on\') { $config->AbsolutePosition = TRUE; } if (isset($RequiredMessagePosition) && !empty($RequiredMessagePosition)) { $config->RequiredMessagePosition = $RequiredMessagePosition; } if (isset($RequiredMessageCSSClass) && !empty($RequiredMessageCSSClass)) { $config->RequiredMessageCSSClass = $RequiredMessageCSSClass; } if (isset($RequiredMessageCSSStyle) && !empty($RequiredMessageCSSStyle)) { $config->RequiredMessageCSSStyle = $RequiredMessageCSSStyle; } if (((isset($MinLength) && !empty($MinLength)) || (isset($MaxLength) && !empty($MaxLength))) && isset($Validate) && $Validate == \'on\') { if (isset($MinLength) && !empty($MinLength)) { $config->min = $MinLength; }; if (isset($MaxLength) && !empty($MaxLength)) { $config->max = $MaxLength; }; $config->events->blur[] = \'minmax\'; $config->Validate = TRUE; } if (count( (array) $config->events) > 0) { $config->id = "ufo-field-id-$id"; $config->form = "ufo-form-id-$formid"; $js = \'ufoForms.validate(\' . json_encode($config) . \');\'; echo "<script type=\'text/javascript\'>" . $js . "</script>"; } ?>]]></Validation><?php } ?><Input <?php if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit != \'chars\') {echo \' width="\' . $Width . $WidthUnit . \'"\';}; ?><?php if (isset($RowCSSClass) && !empty($RowCSSClass) && isset($SetStyle) && $SetStyle == \'on\') {echo \' rowclass="\' . $RowCSSClass . \'"\';}; ?><?php if (isset($InputPosition) && !empty($InputPosition)) {echo \' position="\' . $InputPosition . \'"\';}; ?>><![CDATA[<input type=\'text\' id=\'ufo-field-id-<?php echo $id;?>\' value=\'{id-<?php echo $id ?>}\' name=\'id-<?php echo $id;?>\' <?php $class = array();if (isset($CSSClass) && !empty($CSSClass)) { $class[] = $CSSClass; };if (count($class) > 0) {echo " class=\'" . implode(\' \', $class) . "\'";};if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && $WidthUnit == \'chars\') {echo "size=\'$Width\'";};$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($Width) && !empty($Width) && isset($WidthUnit) && !empty($WidthUnit) && $WidthUnit != \'chars\') {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>>]]></Input></field>',
-			'CssClass' => 'ufo-customfield-agent',
+			'Description' => 'Hidden',
+			'CssClass' => 'ufo-customfield-hidden',
 			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Last Name</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>off</Required><RequiredMessage>This field is required</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><MinLength/><MaxLength/><SetValidMessage>off</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
-			'Processor' => '<?php switch ($phase->index) { case 3: $required = ((string) $xml->Required) == \'on\'; $dv = (string) $xml->DefaultValue; if ($required && empty($dv)) { $dv = \'Please enter \' . (string) $xml->Label; $xml->DefaultValue = $dv; $xml->SetDefaultValue = \'on\'; $fld->set(\'Settings\', $xml->asXML()); $fld->save(); $varmap[\'id-\' . $fldid] = $dv; } break; } ?>',
 			'ListPosition' => 1000,
 			'ValueField' => 0,
 		),
 		array(
-			'id' => 1,
-			'Description' => 'Fieldset',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'top-inside\' <?php echo $DescriptionPosition == \'top-inside\' ? \' selected\' : \'\';?>>top-inside</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option><option value=\'bottom-inside\' <?php echo $DescriptionPosition == \'bottom-inside\' ? \' selected\' : \'\';?>>bottom-inside</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'top\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><Container containertag="fieldset"><![CDATA[<fieldset<?php if (isset($CSSClass)  && !empty($CSSClass)) { echo " class=\'$CSSClass\'"; };$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($WidthUnit) && isset($Width)) {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><legend <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";};if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) {echo "style=\'$LabelCSSStyle\'";};?>><?php echo $Label; ?></legend><?php } ?>]]></Container></field>',
-			'CssClass' => 'ufo-customfield-fieldset',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Fieldset</Label><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>top</DescriptionPosition><DescriptionCSSClass>ufo-customfields-container-description</DescriptionCSSClass><DescriptionCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
-			'ListPosition' => 100,
+			'id' => 16,
+			'Description' => 'Phone Number',
+			'CssClass' => 'ufo-customfield-phonenumber',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Phone Number</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetDefaultValue>off</SetDefaultValue><DefaultValue/><IsBlankValue>on</IsBlankValue><DefaultValueCSSClass/><Required>on</Required><RequiredMessage>Please enter a valid phone number</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>on</Validate><SetValidMessage>on</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><RowCSSClass/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
+			'ListPosition' => 650,
+			'ValueField' => 1,
+		),
+		array(
+			'id' => 19,
+			'Description' => 'Text Paragraph',
+			'CssClass' => 'ufo-customfield-textparagraph',
+			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Text Paragraph</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
+			'ListPosition' => 450,
 			'ValueField' => 0,
 		),
 		array(
-			'id' => 2,
-			'Description' => 'Section',
-			'Form' => '<div class=\'ufo-customform-fieldform\'><div id=\'ufo-customform-settings-showlabel-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowLabel\' value=\'<?php echo $ShowLabel == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowLabel == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowLabel\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowLabel\');?></label></div></div><div id=\'ufo-customform-settings-showlabel\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Label\'><?php echo EasyContactFormsT::get(\'CF_Label\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Label\' value=\'<?php echo $Label;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'LabelTagName\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'h1\' <?php echo $LabelTagName == \'h1\' ? \' selected\' : \'\';?>>Header 1 (h1)</option><option value=\'h2\' <?php echo $LabelTagName == \'h2\' ? \' selected\' : \'\';?>>Header 2 (h2)</option><option value=\'h3\' <?php echo $LabelTagName == \'h3\' ? \' selected\' : \'\';?>>Header 3 (h3)</option><option value=\'h4\' <?php echo $LabelTagName == \'h4\' ? \' selected\' : \'\';?>>Header 4 (h4)</option><option value=\'h5\' <?php echo $LabelTagName == \'h5\' ? \' selected\' : \'\';?>>Header 5 (h5)</option><option value=\'span\' <?php echo $LabelTagName == \'span\' ? \' selected\' : \'\';?>>span</option><option value=\'p\' <?php echo $LabelTagName == \'p\' ? \' selected\' : \'\';?>>p</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Label";c.events = {};c.events.blur = [];c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Label-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div><div id=\'ufo-customform-settings-showlabel-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showlabel-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showlabel-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showlabel-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'LabelCSSClass\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSClass\');?></label><input type=\'string\' id=\'LabelCSSClass\' value=\'<?php echo $LabelCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'LabelCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_LabelCSSStyle\');?></label><div><textarea id=\'LabelCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $LabelCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-showdescription-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'ShowDescription\' value=\'<?php echo $ShowDescription == \'on\' ? \'on\' : \'off\';?>\' <?php echo $ShowDescription == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'ShowDescription\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_ShowDescription\');?></label></div></div><div id=\'ufo-customform-settings-showdescription\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Description\'><?php echo EasyContactFormsT::get(\'CF_Description\');?></label><div><textarea id=\'Description\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $Description;?></textarea></div></div><div><label for=\'DescriptionPosition\'><?php echo EasyContactFormsT::get(\'CF_DescriptionPosition\');?></label><select id=\'DescriptionPosition\' class=\'ufo-formvalue inputselect ufo-select\' style=\'width:100%\'><option value=\'top\' <?php echo $DescriptionPosition == \'top\' ? \' selected\' : \'\';?>>top</option><option value=\'top-inside\' <?php echo $DescriptionPosition == \'top-inside\' ? \' selected\' : \'\';?>>top-inside</option><option value=\'bottom\' <?php echo $DescriptionPosition == \'bottom\' ? \' selected\' : \'\';?>>bottom</option><option value=\'bottom-inside\' <?php echo $DescriptionPosition == \'bottom-inside\' ? \' selected\' : \'\';?>>bottom-inside</option></select></div><div id=\'ufo-customform-settings-showdescription-advanced-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-showdescription-advanced-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-showdescription-advanced");\'>&nbsp;</span><span class=\'ufo-customform-fieldform-fieldset-legend-label\'><?php echo EasyContactFormsT::get(\'CF_Advanced\');?></span></div><div id=\'ufo-customform-settings-showdescription-advanced\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'DescriptionCSSClass\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSClass\');?></label><input type=\'string\' id=\'DescriptionCSSClass\' value=\'<?php echo $DescriptionCSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'DescriptionCSSStyle\'><?php echo EasyContactFormsT::get(\'CF_DescriptionCSSStyle\');?></label><div><textarea id=\'DescriptionCSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $DescriptionCSSStyle;?></textarea></div></div></div></div></div></div><div id=\'ufo-customform-settings-setstyle-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setstyle-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setstyle");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetStyle\' value=\'<?php echo $SetStyle == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetStyle == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetStyle\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetStyle\');?></label></div></div><div id=\'ufo-customform-settings-setstyle\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'id\' style=\'width:auto;margin-left:0;font-family:Arial;display:inline;margin:4px;font-size:12px;line-height:16px;padding:0\'><?php echo EasyContactFormsT::get(\'CF_id\');?></label><span id=\'id\' class=\'ufo-formvalue ufo-customform-fieldform-fieldset-span\'><?php echo $id;?></span></div><div><label for=\'CSSClass\'><?php echo EasyContactFormsT::get(\'CF_CSSClass\');?></label><input type=\'string\' id=\'CSSClass\' value=\'<?php echo $CSSClass;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'></div><div><label for=\'CSSStyle\'><?php echo EasyContactFormsT::get(\'CF_CSSStyle\');?></label><div><textarea id=\'CSSStyle\' class=\'ufo-formvalue textinput ufo-textarea\' style=\'width:95%\'><?php echo $CSSStyle;?></textarea></div></div></div></div><div id=\'ufo-customform-settings-setsize-fieldset\' class=\'ufo-customform-fieldform-fieldset ufo-id-link\'><div class=\'ufo-customform-fieldform-fieldset-legend\'><span id=\'ufo-customform-settings-setsize-expander\' class=\'ufo-customform-fieldform-fieldset-expander ufo-id-link\' onclick=\'ufoCf.expanderClick(this.id, "ufo-customform-settings-setsize");\'>&nbsp;</span><div><input type=\'checkbox\' id=\'SetSize\' value=\'<?php echo $SetSize == \'on\' ? \'on\' : \'off\';?>\' <?php echo $SetSize == \'on\' ? \'checked\' : \'\';?> class=\'ufo-formvalue ufo-customform-fieldform-fieldset-cb\' onchange=\'this.value=(this.checked)?"on":"off";\'><label for=\'SetSize\' style=\'width:auto;font-family:Arial;clear:none;display:block;margin:0;float:none;font-size:12px;padding:0;line-height:16px\'><?php echo EasyContactFormsT::get(\'CF_SetSize\');?></label></div></div><div id=\'ufo-customform-settings-setsize\' class=\'ufo-customform-fieldform-fieldset-hidden ufo-id-link\'><div><label for=\'Width\'><?php echo EasyContactFormsT::get(\'CF_Width\');?></label><div style=\'clear:left\'></div><div style=\'position:relative;padding-right:100px\'><input type=\'string\' id=\'Width\' value=\'<?php echo $Width;?>\' class=\'ufo-formvalue textinput ufo-text\' style=\'width:100%\'><select id=\'WidthUnit\' class=\'ufo-formvalue inputselect ufo-select\' style=\'right:0;position:absolute;top:0;width:99px\'><option value=\'px\' <?php echo $WidthUnit == \'px\' ? \' selected\' : \'\';?>>px</option><option value=\'%\' <?php echo $WidthUnit == \'%\' ? \' selected\' : \'\';?>>%</option><option value=\'em\' <?php echo $WidthUnit == \'em\' ? \' selected\' : \'\';?>>em</option></select></div><input type=\'hidden\' value=\'var c = {};c.id = "Width";c.events = {};c.events.blur = [];c.integer={};c.integer.msg=AppMan.resources.ThisIsAnIntegerField;c.events.blur.push("integer");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);\' class=\'ufo-eval\'><div id=\'Width-invalid\' class=\'ufo-fields-invalid-value ufo-id-link\' style=\'display:none\'></div></div></div></div></div>',
-			'Template' => '<field><?php if (isset($ShowDescription) && $ShowDescription == \'on\') { ?><ShowDescription position="<?php if (isset($DescriptionPosition) && !empty($DescriptionPosition)) { echo $DescriptionPosition; } else {echo \'top\';} ?>"><![CDATA[<div <?php if (isset($DescriptionCSSClass) && !empty($DescriptionCSSClass)) {echo "class=\'$DescriptionCSSClass\'";}; if (isset($DescriptionCSSStyle) && !empty($DescriptionCSSStyle)) {echo " style=\'$DescriptionCSSStyle\'";}; ?>><?php if (isset($Description)) {echo $Description; }; ?></div>]]></ShowDescription><?php } ?><Container containertag="div"><![CDATA[<div<?php if (isset($CSSClass)  && !empty($CSSClass)) { echo " class=\'$CSSClass\'"; };$style = array();if (isset($SetSize) && $SetSize == \'on\' && isset($WidthUnit) && isset($Width)) {$style[] = "width:{$Width}{$WidthUnit}";};if (isset($SetStyle) && $SetStyle == \'on\' && isset($CSSStyle) && !empty($CSSStyle)) { $style[] = $CSSStyle; };if (count($style) > 0) {echo " style=\'" . implode(\';\', $style) . "\'";};?>><?php if (isset($ShowLabel) && $ShowLabel == \'on\') { ?><?php if (!isset($LabelTagName) || empty($LabelTagName)) {$LabelTagName = \'h3\';}; ?><<?php echo $LabelTagName;?> <?php if (isset($LabelCSSClass) && !empty($LabelCSSClass)) {echo "class=\'$LabelCSSClass\'";};if (isset($LabelCSSStyle) && !empty($LabelCSSStyle)) {echo "style=\'$LabelCSSStyle\'";};?>><?php echo $Label; ?></<?php echo $LabelTagName;?>><?php } ?>]]></Container></field>',
-			'CssClass' => 'ufo-customfield-section',
-			'Settings' => '<form><ShowLabel>on</ShowLabel><Label>Section</Label><LabelTagName>h3</LabelTagName><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>top</DescriptionPosition><DescriptionCSSClass>ufo-customfields-container-description</DescriptionCSSClass><DescriptionCSSStyle/><SetStyle>off</SetStyle><CSSClass/><CSSStyle/><SetSize>off</SetSize><Width>230</Width><WidthUnit>px</WidthUnit></form>',
-			'ListPosition' => 200,
+			'id' => 20,
+			'Description' => 'Google Map',
+			'CssClass' => 'ufo-customfield-googlemap',
+			'Settings' => '<form><GoolgeMapSettings>on</GoolgeMapSettings><Latitude/><Longitude/><Zoom>16</Zoom><ShowLabel>on</ShowLabel><Label>Google Map</Label><LabelPosition>top-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>top</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><SetStyle>off</SetStyle><CSSClass>ufo-google-map</CSSClass><CSSStyle/><RowCSSClass/><SetSize>on</SetSize><Width>400</Width><WidthUnit>px</WidthUnit><Height>500</Height><HeightUnit>px</HeightUnit></form>',
+			'ListPosition' => 950,
 			'ValueField' => 0,
+		),
+		array(
+			'id' => 22,
+			'Description' => 'File Upload',
+			'CssClass' => 'ufo-customfield-fileupload',
+			'Settings' => '<form><FileSettings>on</FileSettings><ButtonText>Upload</ButtonText><UploadingText>Uploading...</UploadingText><OnlyAdminsCanDownload>on</OnlyAdminsCanDownload><AttachToConfirmation>off</AttachToConfirmation><AttachToNotification>off</AttachToNotification><ShowLabel>off</ShowLabel><Label>File Upload</Label><LabelPosition>left-align-left</LabelPosition><Advanced/><LabelCSSClass/><LabelCSSStyle/><ShowDescription>off</ShowDescription><Description/><DescriptionPosition>bottom</DescriptionPosition><DescriptionCSSClass>ufo-customfields-field-description</DescriptionCSSClass><DescriptionCSSStyle/><Required>off</Required><RequiredMessage>Please select a file</RequiredMessage><RequiredMessagePosition>right</RequiredMessagePosition><SetRequiredSuffix>on</SetRequiredSuffix><RequiredSuffix>*</RequiredSuffix><RequiredSuffixCSSClass>ufo-customfields-required-suffix</RequiredSuffixCSSClass><RequiredSuffixCSSStyle/><AbsolutePosition>on</AbsolutePosition><InvalidCSSClass/><RequiredMessageCSSClass/><RequiredMessageCSSStyle/><Validate>off</Validate><SetValidMessage>on</SetValidMessage><ValidMessageAbsolutePosition>on</ValidMessageAbsolutePosition><ValidMessage/><ValidMessagePosition>right</ValidMessagePosition><ValidCSSClass/><ValidCSSStyle/><SetStyle>on</SetStyle><CSSClass>ufo-frontendbutton blue</CSSClass><CSSStyle>width:130px;</CSSStyle><RowCSSClass/></form>',
+			'ListPosition' => 925,
+			'ValueField' => 1,
 		),
 	);
 
 	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_customformfieldtypes');
-	$wpdb->query('DELETE FROM ' . $table_name . ' WHERE 1;' );
+	$existent = $wpdb->get_col( 'SELECT id FROM ' . $table_name . ';' );
 	foreach ($rows as $row) {
-		$wpdb->insert($table_name, $row);
-	}
-
-
-	$rows = array(
-		array(
-			'id' => 224,
-			'Description' => 'Employee',
-			'Name' => 'Employee',
-			'ContactType' => 4,
-			'Birthday' => 317599200,
-			'Role' => 3,
-			'CMSId' => 5,
-			'Notes' => 'Cras massa libero, laoreet non semper id, vulputate nec neque. Mauris a ultrices sem. Donec euismod, justo a tempus mollis, leo felis mollis arcu, ut pulvinar odio sem a risus. Aliquam condimentum, leo et sagittis tristique, urna libero dignissim odio, ut luctus ipsum elit vel turpis. Fusce in tempor nunc. Ut ultricies consequat enim, a condimentum enim tincidunt eu. Morbi ac ligula id leo laoreet ullamcorper eu et magna. <br /><br />Cras lectus ipsum, lobortis ut iaculis sed, porta id lectus. Sed nec justo sed urna venenatis consectetur. <br /><br />Cras lectus ipsum, lobortis ut iaculis sed, porta id lectus. Sed nec justo sed urna venenatis consectetur.',
-			'email' => 'employee@iprojectbasic.example.com',
-			'email2' => 'employee2@iprojectbasic.example.com',
-			'Cell' => '+33 666-8888',
-			'Phone1' => '+55 556-6660',
-			'Phone2' => '+00 011-1166',
-			'Phone3' => '+68 811-1555',
-			'ContactField3' => 'Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus. <br /><br />Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus.',
-			'ContactField4' => 'Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus. <br /><br />Duis purus ipsum, consectetur quis scelerisque in, fringilla id nunc. In bibendum eros quis nulla tempus vitae iaculis ante euismod. Proin condimentum mi eu felis consequat sollicitudin consequat arcu luctus. Nullam eros mauris, vulputate imperdiet cursus ut, porttitor ut risus. Vestibulum nec est non justo blandit mollis. Phasellus condimentum nulla felis, nec gravida lacus. Curabitur urna nunc, consequat vel pharetra nec, rhoncus eu nisl. Donec tincidunt sollicitudin libero, et fringilla urna feugiat in. In viverra elementum augue quis laoreet. Maecenas eget dui felis. Quisque rhoncus sodales bibendum.',
-			'Country' => 'Germany',
-			'Address' => '27 Wallstrasse',
-			'City' => 'Hammerstein',
-			'History' => 'Duis purus ipsum, consectetur quis scelerisque in, fringilla id nunc. In bibendum eros quis nulla tempus vitae iaculis ante euismod. Proin condimentum mi eu felis consequat sollicitudin consequat arcu luctus. Nullam eros mauris, vulputate imperdiet cursus ut, porttitor ut risus. Vestibulum nec est non justo blandit mollis. Phasellus condimentum nulla felis, nec gravida lacus. Curabitur urna nunc, consequat vel pharetra nec, rhoncus eu nisl. Donec tincidunt sollicitudin libero, et fringilla urna feugiat in. In viverra elementum augue quis laoreet. Maecenas eget dui felis. Quisque rhoncus sodales bibendum.<br /><br />Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus.',
-		),
-		array(
-			'id' => 230,
-			'Description' => 'Williams',
-			'Name' => 'William',
-			'ContactType' => 4,
-			'Birthday' => 63669600,
-			'Role' => 4,
-			'Notes' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio. <br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio. <br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
-			'email' => 'william@iprojectbasic.example.com',
-			'email2' => 'william2@iprojectbasic.example.com',
-			'Cell' => '+11 188-8800',
-			'Phone1' => '+08 855-6661',
-			'Phone2' => '+11 444-4222',
-			'Phone3' => '+20 003-3333',
-			'ContactField3' => 'Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.<br /><br />Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.',
-			'ContactField4' => 'Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.<br /><br />Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam quam est, malesuada vitae accumsan ut, dapibus condimentum ligula. Integer eget feugiat velit. Duis ut tortor quis enim convallis consectetur ut posuere metus.',
-			'Country' => 'USA',
-			'Address' => '18 Laurel Lee',
-			'City' => 'Saint Paul',
-			'History' => 'Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam quam est, malesuada vitae accumsan ut, dapibus condimentum ligula. Integer eget feugiat velit. Duis ut tortor quis enim convallis consectetur ut posuere metus.<br /><br />Suspendisse potenti.',
-		),
-		array(
-			'id' => 225,
-			'Description' => 'SuperAdmin',
-			'Name' => 'SuperAdmin',
-			'ContactType' => 4,
-			'Birthday' => 127519200,
-			'Role' => 1,
-			'CMSId' => $userid,
-			'Notes' => 'Donec euismod tincidunt enim sed cursus. Curabitur quis lacus massa, eu congue erat. Curabitur ullamcorper volutpat lacus, quis dapibus nunc placerat non. Donec vel nunc at sem euismod volutpat ac sit amet justo. Etiam scelerisque vulputate quam. Donec mi sapien, fringilla mollis commodo ut, posuere faucibus nisi. Donec in felis a arcu ultricies rutrum. Praesent sollicitudin tempus augue, nec ultrices velit mattis ac. Mauris at nibh sed lectus dignissim condimentum. <br /><br />Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.<br /><br />Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.',
-			'email' => 'superadmin@iprojectbasic.example.com',
-			'email2' => 'superadmin2@iprojectbasic.example.com',
-			'Cell' => '+62 222-1117',
-			'Phone1' => '+77 115-5557',
-			'Phone2' => '+77 722-2111',
-			'Phone3' => '+15 555-1111',
-			'ContactField3' => 'Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus. <br /><br />Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus.',
-			'ContactField4' => 'Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus. <br /><br />Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus.',
-			'Country' => 'USA',
-			'Address' => '191 Lilac Lane',
-			'City' => 'Waycross',
-			'History' => 'Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. <br /><br />Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.',
-		),
-		array(
-			'id' => 226,
-			'Description' => 'Gonzalez',
-			'Name' => 'Martha',
-			'ContactType' => 4,
-			'Birthday' => 284853600,
-			'Role' => 4,
-			'Notes' => 'Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.<br /><br />Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.<br /><br />Vestibulum lorem enim, accumsan ac volutpat eu, tristique id leo. Sed ornare augue massa. Nam sed libero sed diam volutpat gravida. Sed ac massa nisi. Etiam dapibus libero non sapien iaculis ac elementum ipsum convallis. Curabitur sodales ultricies erat a iaculis. Suspendisse sit amet nibh vitae dolor varius malesuada. Mauris consequat, dolor ac auctor faucibus, tortor purus euismod ipsum, vel accumsan magna dolor vel nisl. Aenean elementum eleifend sapien vel dignissim.',
-			'email' => 'martha@iprojectbasic.example.com',
-			'email2' => 'martha2@iprojectbasic.example.com',
-			'Cell' => '+99 444-4000',
-			'Phone1' => '+00 077-7555',
-			'Phone2' => '+55 555-8888',
-			'Phone3' => '+77 755-5999',
-			'ContactField3' => 'In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.<br /><br />Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl.',
-			'ContactField4' => 'Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl. <br /><br />Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl.',
-			'Country' => 'Germany',
-			'Address' => '210 Am Borsigturm',
-			'City' => 'Velbert Neviges',
-			'History' => 'Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam. <br /><br />Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam.',
-		),
-		array(
-			'id' => 231,
-			'Description' => 'Vega',
-			'Name' => 'Beulah',
-			'ContactType' => 1,
-			'Birthday' => 285285600,
-			'Role' => 4,
-			'Notes' => 'Etiam neque nunc, fermentum sit amet fermentum ut, ultrices vitae neque. Maecenas nibh enim, dictum a semper et, sagittis viverra purus. Nunc ullamcorper, orci et facilisis congue, velit diam luctus mauris, dapibus iaculis lorem sapien eu lacus. Aliquam eget turpis odio. Ut felis nunc, sodales ultricies egestas ac, euismod et urna.<br /><br />Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam. <br /><br />Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam.',
-			'email' => 'beulah@iprojectbasic.example.com',
-			'email2' => 'beulah2@iprojectbasic.example.com',
-			'Cell' => '+87 666-6555',
-			'Phone1' => '+77 779-9911',
-			'Phone2' => '+12 222-8888',
-			'Phone3' => '+77 799-9944',
-			'ContactField3' => 'Phasellus in metus in magna vestibulum ultricies. In nec metus mauris, vitae semper justo. Suspendisse posuere leo vel velit pellentesque ornare eget vitae libero. Sed feugiat augue nec metus pulvinar eget porttitor nunc sollicitudin. Proin mattis, dolor vitae vehicula sagittis, justo tellus adipiscing leo, quis sagittis risus eros vel quam. Morbi id nisl purus. Nulla porta leo elit.<br /><br />Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac. Fusce at eros sed dolor aliquam vestibulum. Mauris eget ante sapien. Donec eu justo ac purus consectetur faucibus. Nullam consectetur scelerisque massa et scelerisque. Ut a eros justo, et pellentesque felis. Duis at mi erat, nec dapibus nulla. Nam laoreet, eros et tempor convallis, arcu ante fermentum eros, sit amet luctus tellus lorem id nisi. Phasellus tempus, tortor et lacinia fringilla, magna metus dignissim dolor, vel vulputate purus massa non turpis.',
-			'ContactField4' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac. Fusce at eros sed dolor aliquam vestibulum. Mauris eget ante sapien. Donec eu justo ac purus consectetur faucibus. Nullam consectetur scelerisque massa et scelerisque. Ut a eros justo, et pellentesque felis. Duis at mi erat, nec dapibus nulla. Nam laoreet, eros et tempor convallis, arcu ante fermentum eros, sit amet luctus tellus lorem id nisi. Phasellus tempus, tortor et lacinia fringilla, magna metus dignissim dolor, vel vulputate purus massa non turpis. <br /><br />Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac. Fusce at eros sed dolor aliquam vestibulum. Mauris eget ante sapien. Donec eu justo ac purus consectetur faucibus. Nullam consectetur scelerisque massa et scelerisque. Ut a eros justo, et pellentesque felis. Duis at mi erat, nec dapibus nulla. Nam laoreet, eros et tempor convallis, arcu ante fermentum eros, sit amet luctus tellus lorem id nisi. Phasellus tempus, tortor et lacinia fringilla, magna metus dignissim dolor, vel vulputate purus massa non turpis.',
-			'Country' => 'Germany',
-			'Address' => '16 Wallstrasse',
-			'City' => 'Hammerstein',
-			'History' => 'Cras lectus ipsum, lobortis ut iaculis sed, porta id lectus. Sed nec justo sed urna venenatis consectetur. <br /><br />Cras lectus ipsum, lobortis ut iaculis sed, porta id lectus. Sed nec justo sed urna venenatis consectetur.',
-		),
-		array(
-			'id' => 227,
-			'Description' => 'Cooper',
-			'Name' => 'Fannie',
-			'ContactType' => 4,
-			'Birthday' => 96069600,
-			'Role' => 4,
-			'Notes' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac. Fusce at eros sed dolor aliquam vestibulum. Mauris eget ante sapien. Donec eu justo ac purus consectetur faucibus. Nullam consectetur scelerisque massa et scelerisque. Ut a eros justo, et pellentesque felis. Duis at mi erat, nec dapibus nulla. Nam laoreet, eros et tempor convallis, arcu ante fermentum eros, sit amet luctus tellus lorem id nisi. Phasellus tempus, tortor et lacinia fringilla, magna metus dignissim dolor, vel vulputate purus massa non turpis. <br /><br />Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac. Fusce at eros sed dolor aliquam vestibulum. Mauris eget ante sapien. Donec eu justo ac purus consectetur faucibus. Nullam consectetur scelerisque massa et scelerisque. Ut a eros justo, et pellentesque felis. Duis at mi erat, nec dapibus nulla. Nam laoreet, eros et tempor convallis, arcu ante fermentum eros, sit amet luctus tellus lorem id nisi. Phasellus tempus, tortor et lacinia fringilla, magna metus dignissim dolor, vel vulputate purus massa non turpis. <br /><br />Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sagittis tincidunt tortor, non bibendum risus lobortis ac. Fusce at eros sed dolor aliquam vestibulum. Mauris eget ante sapien. Donec eu justo ac purus consectetur faucibus. Nullam consectetur scelerisque massa et scelerisque. Ut a eros justo, et pellentesque felis. Duis at mi erat, nec dapibus nulla. Nam laoreet, eros et tempor convallis, arcu ante fermentum eros, sit amet luctus tellus lorem id nisi. Phasellus tempus, tortor et lacinia fringilla, magna metus dignissim dolor, vel vulputate purus massa non turpis.',
-			'email' => 'fannie@iprojectbasic.example.com',
-			'email2' => 'fannie2@iprojectbasic.example.com',
-			'Cell' => '+09 992-2233',
-			'Phone1' => '+33 888-8444',
-			'Phone2' => '+40 000-2255',
-			'Phone3' => '+51 111-2225',
-			'ContactField3' => 'Donec euismod tincidunt enim sed cursus. Curabitur quis lacus massa, eu congue erat. Curabitur ullamcorper volutpat lacus, quis dapibus nunc placerat non. Donec vel nunc at sem euismod volutpat ac sit amet justo. Etiam scelerisque vulputate quam. Donec mi sapien, fringilla mollis commodo ut, posuere faucibus nisi. Donec in felis a arcu ultricies rutrum. Praesent sollicitudin tempus augue, nec ultrices velit mattis ac. Mauris at nibh sed lectus dignissim condimentum. <br /><br />Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus.',
-			'ContactField4' => 'Aliquam facilisis dolor id diam tempus sed vestibulum magna varius. Duis quis libero libero. Pellentesque elementum dictum lorem, ut sagittis orci adipiscing sed. Donec elementum nisl a odio consequat accumsan. Nam sagittis scelerisque purus in eleifend. Curabitur eget quam lorem, vitae tristique tortor. Vestibulum pretium ante sit amet velit pharetra at rhoncus lorem interdum. <br /><br />Aliquam facilisis dolor id diam tempus sed vestibulum magna varius. Duis quis libero libero. Pellentesque elementum dictum lorem, ut sagittis orci adipiscing sed. Donec elementum nisl a odio consequat accumsan. Nam sagittis scelerisque purus in eleifend. Curabitur eget quam lorem, vitae tristique tortor. Vestibulum pretium ante sit amet velit pharetra at rhoncus lorem interdum.',
-			'Country' => 'Germany',
-			'Address' => '122 Fasanenstrasse',
-			'City' => 'Hamburg Sankt Pauli',
-			'History' => 'Aliquam erat volutpat. Maecenas ultricies feugiat dui vitae pulvinar. Integer convallis ultrices tempor. Ut consequat nunc eget tellus ultrices sollicitudin. Phasellus mattis scelerisque vestibulum. Nulla facilisi. Pellentesque imperdiet vestibulum mauris, in condimentum arcu dignissim sed. Suspendisse potenti. Nulla pretium ultricies erat, vitae scelerisque tortor semper et. <br /><br />Aliquam erat volutpat. Maecenas ultricies feugiat dui vitae pulvinar. Integer convallis ultrices tempor. Ut consequat nunc eget tellus ultrices sollicitudin. Phasellus mattis scelerisque vestibulum. Nulla facilisi. Pellentesque imperdiet vestibulum mauris, in condimentum arcu dignissim sed. Suspendisse potenti. Nulla pretium ultricies erat, vitae scelerisque tortor semper et.',
-		),
-		array(
-			'id' => 232,
-			'Description' => 'Sherman',
-			'Name' => 'Keith',
-			'ContactType' => 1,
-			'Birthday' => 317599200,
-			'Role' => 4,
-			'Notes' => 'Cras massa libero, laoreet non semper id, vulputate nec neque. Mauris a ultrices sem. Donec euismod, justo a tempus mollis, leo felis mollis arcu, ut pulvinar odio sem a risus. Aliquam condimentum, leo et sagittis tristique, urna libero dignissim odio, ut luctus ipsum elit vel turpis. Fusce in tempor nunc. Ut ultricies consequat enim, a condimentum enim tincidunt eu. Morbi ac ligula id leo laoreet ullamcorper eu et magna. <br /><br />Cras massa libero, laoreet non semper id, vulputate nec neque. Mauris a ultrices sem. Donec euismod, justo a tempus mollis, leo felis mollis arcu, ut pulvinar odio sem a risus. Aliquam condimentum, leo et sagittis tristique, urna libero dignissim odio, ut luctus ipsum elit vel turpis. Fusce in tempor nunc. Ut ultricies consequat enim, a condimentum enim tincidunt eu. Morbi ac ligula id leo laoreet ullamcorper eu et magna. <br /><br />Maecenas egestas consectetur nisl quis convallis. Maecenas nisi sapien, molestie ac rutrum et, vehicula sed orci.',
-			'email' => 'keith@iprojectbasic.example.com',
-			'email2' => 'keith2@iprojectbasic.example.com',
-			'Cell' => '+66 633-3366',
-			'Phone1' => '+66 448-8888',
-			'Phone2' => '+88 222-5555',
-			'Phone3' => '+77 788-8555',
-			'ContactField3' => 'Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.<br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
-			'ContactField4' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio. <br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
-			'Country' => 'USA',
-			'Address' => '173 Lilac Lane',
-			'City' => 'Waycross',
-			'History' => 'Donec euismod tincidunt enim sed cursus. Curabitur quis lacus massa, eu congue erat. Curabitur ullamcorper volutpat lacus, quis dapibus nunc placerat non. Donec vel nunc at sem euismod volutpat ac sit amet justo. Etiam scelerisque vulputate quam. Donec mi sapien, fringilla mollis commodo ut, posuere faucibus nisi. Donec in felis a arcu ultricies rutrum. Praesent sollicitudin tempus augue, nec ultrices velit mattis ac. Mauris at nibh sed lectus dignissim condimentum. <br /><br />Donec euismod tincidunt enim sed cursus. Curabitur quis lacus massa, eu congue erat. Curabitur ullamcorper volutpat lacus, quis dapibus nunc placerat non. Donec vel nunc at sem euismod volutpat ac sit amet justo. Etiam scelerisque vulputate quam. Donec mi sapien, fringilla mollis commodo ut, posuere faucibus nisi. Donec in felis a arcu ultricies rutrum. Praesent sollicitudin tempus augue, nec ultrices velit mattis ac. Mauris at nibh sed lectus dignissim condimentum.',
-		),
-		array(
-			'id' => 228,
-			'Description' => 'Brooks',
-			'Name' => 'Beverly',
-			'ContactType' => 4,
-			'Birthday' => 95205600,
-			'Role' => 4,
-			'Notes' => 'Praesent ut facilisis odio. Maecenas congue neque ut nisi placerat vitae suscipit mauris fermentum. Praesent non sem tincidunt odio placerat tincidunt. Nulla gravida lectus sed urna mollis lacinia. Ut egestas viverra volutpat. Vestibulum quis nunc erat. Donec faucibus magna at quam condimentum convallis lobortis ante aliquet. Mauris tempor, ipsum a sollicitudin molestie, orci dui laoreet nulla, non accumsan erat libero a nisl. Quisque id luctus enim. Pellentesque id purus odio. Sed cursus pharetra enim eget tempor.<br /><br />Praesent ut facilisis odio. Maecenas congue neque ut nisi placerat vitae suscipit mauris fermentum. Praesent non sem tincidunt odio placerat tincidunt. Nulla gravida lectus sed urna mollis lacinia. Ut egestas viverra volutpat. Vestibulum quis nunc erat. Donec faucibus magna at quam condimentum convallis lobortis ante aliquet. Mauris tempor, ipsum a sollicitudin molestie, orci dui laoreet nulla, non accumsan erat libero a nisl. Quisque id luctus enim. Pellentesque id purus odio. Sed cursus pharetra enim eget tempor.<br /><br />Praesent ut facilisis odio. Maecenas congue neque ut nisi placerat vitae suscipit mauris fermentum. Praesent non sem tincidunt odio placerat tincidunt. Nulla gravida lectus sed urna mollis lacinia. Ut egestas viverra volutpat. Vestibulum quis nunc erat. Donec faucibus magna at quam condimentum convallis lobortis ante aliquet. Mauris tempor, ipsum a sollicitudin molestie, orci dui laoreet nulla, non accumsan erat libero a nisl. Quisque id luctus enim. Pellentesque id purus odio. Sed cursus pharetra enim eget tempor.',
-			'email' => 'beverly@iprojectbasic.example.com',
-			'email2' => 'beverly2@iprojectbasic.example.com',
-			'Cell' => '+88 888-8833',
-			'Phone1' => '+33 999-9555',
-			'Phone2' => '+57 777-7777',
-			'Phone3' => '+88 866-6699',
-			'ContactField3' => 'In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.<br /><br />In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.',
-			'ContactField4' => 'Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus. Donec eget justo augue, vel semper tellus. Morbi venenatis turpis eget eros imperdiet fringilla. Donec eu tincidunt felis. Sed nec nunc id nibh vestibulum tempor eu ac lectus. Maecenas eu tincidunt turpis. Nunc mollis laoreet quam hendrerit dictum. Nulla blandit neque quis magna rutrum tincidunt. Etiam turpis ante, cursus a sagittis non, vehicula in odio. Nullam sed velit odio.<br /><br />Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus. Donec eget justo augue, vel semper tellus. Morbi venenatis turpis eget eros imperdiet fringilla. Donec eu tincidunt felis. Sed nec nunc id nibh vestibulum tempor eu ac lectus. Maecenas eu tincidunt turpis. Nunc mollis laoreet quam hendrerit dictum. Nulla blandit neque quis magna rutrum tincidunt. Etiam turpis ante, cursus a sagittis non, vehicula in odio. Nullam sed velit odio.',
-			'Country' => 'Germany',
-			'Address' => '53 Rohrdamm',
-			'City' => 'Verl',
-			'History' => 'Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus. Donec eget justo augue, vel semper tellus. Morbi venenatis turpis eget eros imperdiet fringilla. Donec eu tincidunt felis. Sed nec nunc id nibh vestibulum tempor eu ac lectus. Maecenas eu tincidunt turpis. Nunc mollis laoreet quam hendrerit dictum. Nulla blandit neque quis magna rutrum tincidunt. Etiam turpis ante, cursus a sagittis non, vehicula in odio. Nullam sed velit odio.<br /><br />Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl.',
-		),
-		array(
-			'id' => 233,
-			'Description' => 'Hodges',
-			'Name' => 'Johnnie',
-			'ContactType' => 1,
-			'Birthday' => 63151200,
-			'Role' => 4,
-			'Notes' => 'Duis purus ipsum, consectetur quis scelerisque in, fringilla id nunc. In bibendum eros quis nulla tempus vitae iaculis ante euismod. Proin condimentum mi eu felis consequat sollicitudin consequat arcu luctus. Nullam eros mauris, vulputate imperdiet cursus ut, porttitor ut risus. Vestibulum nec est non justo blandit mollis. Phasellus condimentum nulla felis, nec gravida lacus. Curabitur urna nunc, consequat vel pharetra nec, rhoncus eu nisl. Donec tincidunt sollicitudin libero, et fringilla urna feugiat in. In viverra elementum augue quis laoreet. Maecenas eget dui felis. Quisque rhoncus sodales bibendum.<br /><br />Cras massa libero, laoreet non semper id, vulputate nec neque. Mauris a ultrices sem. Donec euismod, justo a tempus mollis, leo felis mollis arcu, ut pulvinar odio sem a risus. Aliquam condimentum, leo et sagittis tristique, urna libero dignissim odio, ut luctus ipsum elit vel turpis. Fusce in tempor nunc. Ut ultricies consequat enim, a condimentum enim tincidunt eu. Morbi ac ligula id leo laoreet ullamcorper eu et magna. <br /><br />Cras massa libero, laoreet non semper id, vulputate nec neque. Mauris a ultrices sem. Donec euismod, justo a tempus mollis, leo felis mollis arcu, ut pulvinar odio sem a risus. Aliquam condimentum, leo et sagittis tristique, urna libero dignissim odio, ut luctus ipsum elit vel turpis. Fusce in tempor nunc. Ut ultricies consequat enim, a condimentum enim tincidunt eu. Morbi ac ligula id leo laoreet ullamcorper eu et magna.',
-			'email' => 'johnnie@iprojectbasic.example.com',
-			'email2' => 'johnnie2@iprojectbasic.example.com',
-			'Cell' => '+88 777-9999',
-			'Phone1' => '+99 992-2999',
-			'Phone2' => '+96 644-4777',
-			'Phone3' => '+66 688-8449',
-			'ContactField3' => 'In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.<br /><br />In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.',
-			'ContactField4' => 'In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.<br /><br />Quisque tincidunt magna id magna scelerisque tempor.',
-			'Country' => 'Germany',
-			'Address' => '224 Am Borsigturm',
-			'City' => 'Velbert Neviges',
-			'History' => 'Quisque tincidunt magna id magna scelerisque tempor. <br /><br />Quisque tincidunt magna id magna scelerisque tempor.',
-		),
-		array(
-			'id' => 229,
-			'Description' => 'Sandoval',
-			'Name' => 'Krystal',
-			'ContactType' => 4,
-			'Birthday' => 315612000,
-			'Role' => 4,
-			'Notes' => 'Duis purus ipsum, consectetur quis scelerisque in, fringilla id nunc. In bibendum eros quis nulla tempus vitae iaculis ante euismod. Proin condimentum mi eu felis consequat sollicitudin consequat arcu luctus. Nullam eros mauris, vulputate imperdiet cursus ut, porttitor ut risus. Vestibulum nec est non justo blandit mollis. Phasellus condimentum nulla felis, nec gravida lacus. Curabitur urna nunc, consequat vel pharetra nec, rhoncus eu nisl. Donec tincidunt sollicitudin libero, et fringilla urna feugiat in. In viverra elementum augue quis laoreet. Maecenas eget dui felis. Quisque rhoncus sodales bibendum.<br /><br />Maecenas lacinia arcu nec nisl elementum nec cursus massa consequat. <br /><br />Maecenas lacinia arcu nec nisl elementum nec cursus massa consequat.',
-			'email' => 'krystal@iprojectbasic.example.com',
-			'email2' => 'krystal2@iprojectbasic.example.com',
-			'Cell' => '+84 446-6677',
-			'Phone1' => '+77 772-2299',
-			'Phone2' => '+99 999-6661',
-			'Phone3' => '+14 444-4436',
-			'ContactField3' => 'Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl. <br /><br />Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl.',
-			'ContactField4' => 'Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam. <br /><br />Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam.',
-			'Country' => 'Germany',
-			'Address' => '257 An Der Urania',
-			'City' => 'Rosdorf',
-			'History' => 'Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam. <br /><br />Phasellus in metus in magna vestibulum ultricies. In nec metus mauris, vitae semper justo. Suspendisse posuere leo vel velit pellentesque ornare eget vitae libero. Sed feugiat augue nec metus pulvinar eget porttitor nunc sollicitudin. Proin mattis, dolor vitae vehicula sagittis, justo tellus adipiscing leo, quis sagittis risus eros vel quam. Morbi id nisl purus. Nulla porta leo elit.',
-		),
-		array(
-			'id' => 234,
-			'Description' => 'Graves',
-			'Name' => 'Isabel',
-			'ContactType' => 1,
-			'Birthday' => 222127200,
-			'Role' => 4,
-			'Notes' => 'Nam est nunc, rhoncus non tincidunt vitae, ultricies quis nunc. Nulla eu ipsum nec nunc fringilla sagittis. <br /><br />Nam est nunc, rhoncus non tincidunt vitae, ultricies quis nunc. Nulla eu ipsum nec nunc fringilla sagittis. <br /><br />Nam est nunc, rhoncus non tincidunt vitae, ultricies quis nunc. Nulla eu ipsum nec nunc fringilla sagittis.',
-			'email' => 'isabel@iprojectbasic.example.com',
-			'email2' => 'isabel2@iprojectbasic.example.com',
-			'Cell' => '+77 888-8111',
-			'Phone1' => '+12 222-4440',
-			'Phone2' => '+00 999-4446',
-			'Phone3' => '+66 999-9222',
-			'ContactField3' => 'Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam quam est, malesuada vitae accumsan ut, dapibus condimentum ligula. Integer eget feugiat velit. Duis ut tortor quis enim convallis consectetur ut posuere metus.<br /><br />Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam quam est, malesuada vitae accumsan ut, dapibus condimentum ligula. Integer eget feugiat velit. Duis ut tortor quis enim convallis consectetur ut posuere metus.',
-			'ContactField4' => 'Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam quam est, malesuada vitae accumsan ut, dapibus condimentum ligula. Integer eget feugiat velit. Duis ut tortor quis enim convallis consectetur ut posuere metus.<br /><br />Nullam a neque dolor. Pellentesque elementum, magna quis interdum volutpat, libero ipsum scelerisque turpis, porta pretium dolor lectus ac risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam quam est, malesuada vitae accumsan ut, dapibus condimentum ligula. Integer eget feugiat velit. Duis ut tortor quis enim convallis consectetur ut posuere metus.',
-			'Country' => 'Germany',
-			'Address' => '279 An Der Urania',
-			'City' => 'Rosdorf',
-			'History' => 'Duis purus ipsum, consectetur quis scelerisque in, fringilla id nunc. In bibendum eros quis nulla tempus vitae iaculis ante euismod. Proin condimentum mi eu felis consequat sollicitudin consequat arcu luctus. Nullam eros mauris, vulputate imperdiet cursus ut, porttitor ut risus. Vestibulum nec est non justo blandit mollis. Phasellus condimentum nulla felis, nec gravida lacus. Curabitur urna nunc, consequat vel pharetra nec, rhoncus eu nisl. Donec tincidunt sollicitudin libero, et fringilla urna feugiat in. In viverra elementum augue quis laoreet. Maecenas eget dui felis. Quisque rhoncus sodales bibendum.<br /><br />Duis purus ipsum, consectetur quis scelerisque in, fringilla id nunc. In bibendum eros quis nulla tempus vitae iaculis ante euismod. Proin condimentum mi eu felis consequat sollicitudin consequat arcu luctus. Nullam eros mauris, vulputate imperdiet cursus ut, porttitor ut risus. Vestibulum nec est non justo blandit mollis. Phasellus condimentum nulla felis, nec gravida lacus. Curabitur urna nunc, consequat vel pharetra nec, rhoncus eu nisl. Donec tincidunt sollicitudin libero, et fringilla urna feugiat in. In viverra elementum augue quis laoreet. Maecenas eget dui felis. Quisque rhoncus sodales bibendum.',
-		),
-		array(
-			'id' => 240,
-			'Description' => 'Nelson',
-			'Name' => 'Ralph',
-			'ContactType' => 1,
-			'Birthday' => 126655200,
-			'Role' => 4,
-			'Notes' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio. <br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio. <br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
-			'email' => 'ralph@iprojectbasic.example.com',
-			'email2' => 'ralph2@iprojectbasic.example.com',
-			'Cell' => '+11 144-4422',
-			'Phone1' => '+22 999-9665',
-			'Phone2' => '+00 055-5222',
-			'Phone3' => '+11 116-6667',
-			'ContactField3' => 'Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.<br /><br />Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.',
-			'ContactField4' => 'Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.<br /><br />Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc varius ipsum a orci semper a lobortis mi fermentum.',
-			'Country' => 'USA',
-			'Address' => '125 Lilac Lane',
-			'City' => 'Waycross',
-			'History' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc varius ipsum a orci semper a lobortis mi fermentum. <br /><br />Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc varius ipsum a orci semper a lobortis mi fermentum.',
-		),
-		array(
-			'id' => 235,
-			'Description' => 'Munoz',
-			'Name' => 'Kristi',
-			'ContactType' => 1,
-			'Birthday' => 253231200,
-			'Role' => 4,
-			'Notes' => 'Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.<br /><br />Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam. <br /><br />Nullam quis eros quis enim vehicula aliquet. Nulla pharetra condimentum libero ac tristique. Duis elit lorem, faucibus vitae porttitor in, fermentum eget eros. Sed accumsan cursus elit, eget iaculis est dapibus et. Fusce nulla turpis, sodales ac lobortis in, commodo at neque. Ut semper placerat ipsum, venenatis bibendum tellus volutpat in. Etiam ut est diam, ac adipiscing quam.',
-			'email' => 'kristi@iprojectbasic.example.com',
-			'email2' => 'kristi2@iprojectbasic.example.com',
-			'Cell' => '+80 007-7776',
-			'Phone1' => '+66 000-0555',
-			'Phone2' => '+58 884-4444',
-			'Phone3' => '+49 999-4444',
-			'ContactField3' => 'Cras massa libero, laoreet non semper id, vulputate nec neque. Mauris a ultrices sem. Donec euismod, justo a tempus mollis, leo felis mollis arcu, ut pulvinar odio sem a risus. Aliquam condimentum, leo et sagittis tristique, urna libero dignissim odio, ut luctus ipsum elit vel turpis. Fusce in tempor nunc. Ut ultricies consequat enim, a condimentum enim tincidunt eu. Morbi ac ligula id leo laoreet ullamcorper eu et magna. <br /><br />Phasellus in metus in magna vestibulum ultricies. In nec metus mauris, vitae semper justo. Suspendisse posuere leo vel velit pellentesque ornare eget vitae libero. Sed feugiat augue nec metus pulvinar eget porttitor nunc sollicitudin. Proin mattis, dolor vitae vehicula sagittis, justo tellus adipiscing leo, quis sagittis risus eros vel quam. Morbi id nisl purus. Nulla porta leo elit.',
-			'ContactField4' => 'Phasellus in metus in magna vestibulum ultricies. In nec metus mauris, vitae semper justo. Suspendisse posuere leo vel velit pellentesque ornare eget vitae libero. Sed feugiat augue nec metus pulvinar eget porttitor nunc sollicitudin. Proin mattis, dolor vitae vehicula sagittis, justo tellus adipiscing leo, quis sagittis risus eros vel quam. Morbi id nisl purus. Nulla porta leo elit.<br /><br />Phasellus in metus in magna vestibulum ultricies. In nec metus mauris, vitae semper justo. Suspendisse posuere leo vel velit pellentesque ornare eget vitae libero. Sed feugiat augue nec metus pulvinar eget porttitor nunc sollicitudin. Proin mattis, dolor vitae vehicula sagittis, justo tellus adipiscing leo, quis sagittis risus eros vel quam. Morbi id nisl purus. Nulla porta leo elit.',
-			'Country' => 'USA',
-			'Address' => '140 Filbert Street',
-			'City' => 'Ridley Park',
-			'History' => 'Praesent egestas pretium nisl vulputate blandit. Suspendisse sit amet commodo mauris. Duis vel pellentesque massa. Morbi dignissim accumsan viverra. Duis et velit quam, at viverra tortor. Maecenas lacinia euismod sollicitudin. Morbi nisl mi, vehicula ac molestie vitae, cursus sed sem. Vivamus at nulla eget arcu hendrerit consequat. Mauris vulputate volutpat felis eu elementum. Ut tristique congue metus et rhoncus. Suspendisse nec pellentesque urna. Nulla laoreet sem sit amet dui pretium nec mattis nibh pretium. Mauris sagittis ornare risus, in aliquet elit pretium a. Vestibulum nisi nulla, porttitor at tempus ac, dapibus in lorem.<br /><br />Praesent egestas pretium nisl vulputate blandit. Suspendisse sit amet commodo mauris. Duis vel pellentesque massa. Morbi dignissim accumsan viverra. Duis et velit quam, at viverra tortor. Maecenas lacinia euismod sollicitudin. Morbi nisl mi, vehicula ac molestie vitae, cursus sed sem. Vivamus at nulla eget arcu hendrerit consequat. Mauris vulputate volutpat felis eu elementum. Ut tristique congue metus et rhoncus. Suspendisse nec pellentesque urna. Nulla laoreet sem sit amet dui pretium nec mattis nibh pretium. Mauris sagittis ornare risus, in aliquet elit pretium a. Vestibulum nisi nulla, porttitor at tempus ac, dapibus in lorem.',
-		),
-		array(
-			'id' => 236,
-			'Description' => 'Mills',
-			'Name' => 'Beulah',
-			'ContactType' => 1,
-			'Birthday' => 159832800,
-			'Role' => 4,
-			'Notes' => 'Nulla dui ipsum, bibendum vel ultricies eu, dapibus sit amet eros. Nam augue lectus, dapibus rutrum mattis bibendum, porttitor quis orci. Cras est nulla, dictum quis auctor ut, bibendum vitae diam. Nulla dui tortor, pulvinar id lacinia a, condimentum ut ipsum. Mauris sagittis, arcu eu auctor egestas, purus justo posuere quam, ac porttitor ante tellus eget lorem. In hac habitasse platea dictumst. <br /><br />Nulla dui ipsum, bibendum vel ultricies eu, dapibus sit amet eros. Nam augue lectus, dapibus rutrum mattis bibendum, porttitor quis orci. Cras est nulla, dictum quis auctor ut, bibendum vitae diam. Nulla dui tortor, pulvinar id lacinia a, condimentum ut ipsum. Mauris sagittis, arcu eu auctor egestas, purus justo posuere quam, ac porttitor ante tellus eget lorem. In hac habitasse platea dictumst. <br /><br />Nulla dui ipsum, bibendum vel ultricies eu, dapibus sit amet eros. Nam augue lectus, dapibus rutrum mattis bibendum, porttitor quis orci. Cras est nulla, dictum quis auctor ut, bibendum vitae diam. Nulla dui tortor, pulvinar id lacinia a, condimentum ut ipsum. Mauris sagittis, arcu eu auctor egestas, purus justo posuere quam, ac porttitor ante tellus eget lorem. In hac habitasse platea dictumst.',
-			'email' => 'beulah@iprojectbasic.example.com',
-			'email2' => 'beulah2@iprojectbasic.example.com',
-			'Cell' => '+11 111-0006',
-			'Phone1' => '+66 777-7000',
-			'Phone2' => '+90 007-7711',
-			'Phone3' => '+14 444-8888',
-			'ContactField3' => 'Nulla facilisi. Sed lobortis, sem in tincidunt pharetra, nulla velit malesuada orci, at molestie turpis justo eu felis. Aenean turpis ante, eleifend eget tempor at, dictum vitae felis. Proin feugiat posuere libero et porta. Curabitur varius scelerisque turpis, ut aliquam metus ornare in.<br /><br />Nulla facilisi. Sed lobortis, sem in tincidunt pharetra, nulla velit malesuada orci, at molestie turpis justo eu felis. Aenean turpis ante, eleifend eget tempor at, dictum vitae felis. Proin feugiat posuere libero et porta. Curabitur varius scelerisque turpis, ut aliquam metus ornare in.',
-			'ContactField4' => 'Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl. <br /><br />Aliquam eu nisi vel lorem ultricies laoreet. Nulla eget mi ac leo porttitor luctus a nec purus. Phasellus in erat at nulla feugiat aliquam. Vivamus non eros quis tellus consectetur condimentum eget eu dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris commodo magna vitae libero blandit ultrices eu vulputate nisl.',
-			'Country' => 'USA',
-			'Address' => '208 Franklin Street',
-			'City' => 'Montgomery',
-			'History' => 'Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio. <br /><br />Nulla tincidunt justo nec diam molestie feugiat. Aenean et est non sapien ultrices posuere id a odio.',
-		),
-		array(
-			'id' => 241,
-			'Description' => 'Higgins',
-			'Name' => 'Michelle',
-			'ContactType' => 1,
-			'Birthday' => 284767200,
-			'Role' => 4,
-			'Notes' => 'Morbi pulvinar malesuada risus in tempor. Fusce eu sapien a sem aliquet pulvinar. Nullam elementum facilisis quam, sed sollicitudin tortor gravida et. Nam elit arcu, imperdiet eu rhoncus eget, molestie vitae augue. Sed posuere fermentum ultricies. Duis non odio in urna tempor elementum vitae consequat nibh. Suspendisse commodo, lacus eleifend tempus lacinia, enim odio consequat enim, eget posuere ipsum erat suscipit nisi. Ut mi justo, aliquet euismod luctus et, posuere quis enim. Aliquam sollicitudin nunc ut ante dictum sed convallis lectus feugiat.<br /><br />Aliquam facilisis dolor id diam tempus sed vestibulum magna varius. Duis quis libero libero. Pellentesque elementum dictum lorem, ut sagittis orci adipiscing sed. Donec elementum nisl a odio consequat accumsan. Nam sagittis scelerisque purus in eleifend. Curabitur eget quam lorem, vitae tristique tortor. Vestibulum pretium ante sit amet velit pharetra at rhoncus lorem interdum. <br /><br />Aliquam facilisis dolor id diam tempus sed vestibulum magna varius. Duis quis libero libero. Pellentesque elementum dictum lorem, ut sagittis orci adipiscing sed. Donec elementum nisl a odio consequat accumsan. Nam sagittis scelerisque purus in eleifend. Curabitur eget quam lorem, vitae tristique tortor. Vestibulum pretium ante sit amet velit pharetra at rhoncus lorem interdum.',
-			'email' => 'michelle@iprojectbasic.example.com',
-			'email2' => 'michelle2@iprojectbasic.example.com',
-			'Cell' => '+49 944-4433',
-			'Phone1' => '+33 444-4400',
-			'Phone2' => '+00 991-1188',
-			'Phone3' => '+88 333-6666',
-			'ContactField3' => 'Vestibulum lorem enim, accumsan ac volutpat eu, tristique id leo. Sed ornare augue massa. Nam sed libero sed diam volutpat gravida. Sed ac massa nisi. Etiam dapibus libero non sapien iaculis ac elementum ipsum convallis. Curabitur sodales ultricies erat a iaculis. Suspendisse sit amet nibh vitae dolor varius malesuada. Mauris consequat, dolor ac auctor faucibus, tortor purus euismod ipsum, vel accumsan magna dolor vel nisl. Aenean elementum eleifend sapien vel dignissim.<br /><br />Vestibulum lorem enim, accumsan ac volutpat eu, tristique id leo. Sed ornare augue massa. Nam sed libero sed diam volutpat gravida. Sed ac massa nisi. Etiam dapibus libero non sapien iaculis ac elementum ipsum convallis. Curabitur sodales ultricies erat a iaculis. Suspendisse sit amet nibh vitae dolor varius malesuada. Mauris consequat, dolor ac auctor faucibus, tortor purus euismod ipsum, vel accumsan magna dolor vel nisl. Aenean elementum eleifend sapien vel dignissim.',
-			'ContactField4' => 'Vestibulum lorem enim, accumsan ac volutpat eu, tristique id leo. Sed ornare augue massa. Nam sed libero sed diam volutpat gravida. Sed ac massa nisi. Etiam dapibus libero non sapien iaculis ac elementum ipsum convallis. Curabitur sodales ultricies erat a iaculis. Suspendisse sit amet nibh vitae dolor varius malesuada. Mauris consequat, dolor ac auctor faucibus, tortor purus euismod ipsum, vel accumsan magna dolor vel nisl. Aenean elementum eleifend sapien vel dignissim.<br /><br />Vestibulum lorem enim, accumsan ac volutpat eu, tristique id leo. Sed ornare augue massa. Nam sed libero sed diam volutpat gravida. Sed ac massa nisi. Etiam dapibus libero non sapien iaculis ac elementum ipsum convallis. Curabitur sodales ultricies erat a iaculis. Suspendisse sit amet nibh vitae dolor varius malesuada. Mauris consequat, dolor ac auctor faucibus, tortor purus euismod ipsum, vel accumsan magna dolor vel nisl. Aenean elementum eleifend sapien vel dignissim.',
-			'Country' => 'USA',
-			'Address' => '217 Orchard Street',
-			'City' => 'Webster',
-			'History' => 'Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.<br /><br />Morbi quis magna urna, id viverra ipsum. Fusce nibh orci, interdum id pharetra ut, ultricies vel metus. Donec eget justo augue, vel semper tellus. Morbi venenatis turpis eget eros imperdiet fringilla. Donec eu tincidunt felis. Sed nec nunc id nibh vestibulum tempor eu ac lectus. Maecenas eu tincidunt turpis. Nunc mollis laoreet quam hendrerit dictum. Nulla blandit neque quis magna rutrum tincidunt. Etiam turpis ante, cursus a sagittis non, vehicula in odio. Nullam sed velit odio.',
-		),
-		array(
-			'id' => 237,
-			'Description' => 'Gibson',
-			'Name' => 'Dora',
-			'ContactType' => 1,
-			'Birthday' => 127951200,
-			'Role' => 4,
-			'Notes' => 'Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.<br /><br />Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.<br /><br />Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.',
-			'email' => 'dora@iprojectbasic.example.com',
-			'email2' => 'dora2@iprojectbasic.example.com',
-			'Cell' => '+57 777-5555',
-			'Phone1' => '+22 288-8877',
-			'Phone2' => '+77 999-9999',
-			'Phone3' => '+55 588-8666',
-			'ContactField3' => 'Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.<br /><br />Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.',
-			'ContactField4' => 'Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.<br /><br />Aliquam euismod tincidunt velit, in lobortis velit aliquam id. Morbi risus eros, fringilla et blandit at, semper sit amet magna. Duis auctor convallis ultricies. Fusce pharetra leo sed libero porttitor condimentum. Nulla tempus ligula et nulla cursus in ornare dui tempor. Integer tincidunt laoreet lectus vitae sodales.',
-			'Country' => 'USA',
-			'Address' => '185 Bell Street',
-			'City' => 'New York',
-			'History' => 'Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. <br /><br />Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.',
-		),
-		array(
-			'id' => 238,
-			'Description' => 'Evans',
-			'Name' => 'Nichole',
-			'ContactType' => 1,
-			'Birthday' => 64101600,
-			'Role' => 4,
-			'Notes' => 'Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus. <br /><br />Quisque nec est ut velit commodo interdum. Sed vel metus nec elit sagittis tempus. <br /><br />Nulla facilisi. Sed lobortis, sem in tincidunt pharetra, nulla velit malesuada orci, at molestie turpis justo eu felis. Aenean turpis ante, eleifend eget tempor at, dictum vitae felis. Proin feugiat posuere libero et porta. Curabitur varius scelerisque turpis, ut aliquam metus ornare in.',
-			'email' => 'nichole@iprojectbasic.example.com',
-			'email2' => 'nichole2@iprojectbasic.example.com',
-			'Cell' => '+26 666-2222',
-			'Phone1' => '+99 988-8811',
-			'Phone2' => '+11 777-8888',
-			'Phone3' => '+22 228-8887',
-			'ContactField3' => 'Quisque tincidunt magna id magna scelerisque tempor. <br /><br />Quisque tincidunt magna id magna scelerisque tempor.',
-			'ContactField4' => 'Quisque tincidunt magna id magna scelerisque tempor. <br /><br />Nulla facilisi. Sed lobortis, sem in tincidunt pharetra, nulla velit malesuada orci, at molestie turpis justo eu felis. Aenean turpis ante, eleifend eget tempor at, dictum vitae felis. Proin feugiat posuere libero et porta. Curabitur varius scelerisque turpis, ut aliquam metus ornare in.',
-			'Country' => 'Germany',
-			'Address' => '96 Am Borsigturm',
-			'City' => 'Velbert Neviges',
-			'History' => 'Nulla facilisi. Sed lobortis, sem in tincidunt pharetra, nulla velit malesuada orci, at molestie turpis justo eu felis. Aenean turpis ante, eleifend eget tempor at, dictum vitae felis. Proin feugiat posuere libero et porta. Curabitur varius scelerisque turpis, ut aliquam metus ornare in.<br /><br />Nam viverra vehicula purus, vel ultricies orci faucibus a. Integer venenatis fermentum justo, quis ultrices turpis fermentum vel. Suspendisse potenti. Fusce posuere, risus eu lobortis pretium, neque velit fermentum ante, non volutpat urna mauris in diam. Vestibulum convallis consequat nibh id pellentesque. Donec ultrices, velit ut vehicula facilisis, metus est pellentesque ante, ac mattis turpis urna quis nisi. In dolor lacus, tincidunt vel dictum sed, semper vel eros. Aliquam ornare pretium vestibulum.',
-		),
-		array(
-			'id' => 239,
-			'Description' => 'Horton',
-			'Name' => 'Valerie',
-			'ContactType' => 1,
-			'Birthday' => 222386400,
-			'Role' => 4,
-			'Notes' => 'Praesent egestas pretium nisl vulputate blandit. Suspendisse sit amet commodo mauris. Duis vel pellentesque massa. Morbi dignissim accumsan viverra. Duis et velit quam, at viverra tortor. Maecenas lacinia euismod sollicitudin. Morbi nisl mi, vehicula ac molestie vitae, cursus sed sem. Vivamus at nulla eget arcu hendrerit consequat. Mauris vulputate volutpat felis eu elementum. Ut tristique congue metus et rhoncus. Suspendisse nec pellentesque urna. Nulla laoreet sem sit amet dui pretium nec mattis nibh pretium. Mauris sagittis ornare risus, in aliquet elit pretium a. Vestibulum nisi nulla, porttitor at tempus ac, dapibus in lorem.<br /><br />In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.<br /><br />In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.',
-			'email' => 'valerie@iprojectbasic.example.com',
-			'email2' => 'valerie2@iprojectbasic.example.com',
-			'Cell' => '+99 222-2444',
-			'Phone1' => '+55 333-3770',
-			'Phone2' => '+09 999-7700',
-			'Phone3' => '+88 885-5888',
-			'ContactField3' => 'Maecenas lacinia arcu nec nisl elementum nec cursus massa consequat. <br /><br />Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.',
-			'ContactField4' => 'Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.<br /><br />Fusce massa odio, aliquam ac ullamcorper congue, rutrum sed felis. In nunc purus, volutpat vitae pharetra non, mattis vel quam. Mauris sit amet sem sit amet mauris dignissim scelerisque. Nullam ac orci nisl. Donec convallis quam eget sapien pretium in tempor quam commodo. Ut consectetur tellus vitae lorem tempus id tristique ipsum tempus. Donec eget justo magna, at commodo augue. Phasellus venenatis nisl lectus. Praesent accumsan iaculis massa et pretium. Fusce fringilla, lectus nec aliquet bibendum, felis augue aliquam libero, a vestibulum magna mauris at magna. Fusce nunc arcu, pellentesque quis facilisis sit amet, tempor sit amet tellus. In hac habitasse platea dictumst.',
-			'Country' => 'USA',
-			'Address' => '308 Victoria Court',
-			'City' => 'Sanford',
-			'History' => 'In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.<br /><br />In ut tristique erat. Vestibulum sodales mollis metus a lacinia. Quisque non nibh turpis. Phasellus posuere elit vitae nunc tristique volutpat. Fusce eu diam ligula, sit amet egestas ante.',
-		),
-	);
-
-	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_users');
-	$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ';' ) );
-	if ($count == 0) {
-		foreach ($rows as $row) {
+		$rid = $row['id'];
+		if (in_array($rid, $existent)) {
+			$wpdb->update($table_name, $row, array('id' => $rid));
+		}
+		else {
 			$wpdb->insert($table_name, $row);
 		}
 	}
@@ -1424,18 +2389,33 @@ if (typeof(ufoForms) == \'undefined\') {
 	$rows = array(
 		array(
 			'id' => 1,
-			'Description' => 'Client',
-			'Notes' => 'Aliquam erat volutpat. Maecenas ultricies feugiat dui vitae pulvinar. Integer convallis ultrices tempor. Ut consequat nunc eget tellus ultrices sollicitudin. Phasellus mattis scelerisque vestibulum. Nulla facilisi. Pellentesque imperdiet vestibulum mauris, in condimentum arcu dignissim sed. Suspendisse potenti. Nulla pretium ultricies erat, vitae scelerisque tortor semper et. <br /><br />Etiam neque nunc, fermentum sit amet fermentum ut, ultrices vitae neque. Maecenas nibh enim, dictum a semper et, sagittis viverra purus. Nunc ullamcorper, orci et facilisis congue, velit diam luctus mauris, dapibus iaculis lorem sapien eu lacus. Aliquam eget turpis odio. Ut felis nunc, sodales ultricies egestas ac, euismod et urna.',
-		),
-		array(
-			'id' => 4,
-			'Description' => 'Employee',
-			'Notes' => 'Etiam neque nunc, fermentum sit amet fermentum ut, ultrices vitae neque. Maecenas nibh enim, dictum a semper et, sagittis viverra purus. Nunc ullamcorper, orci et facilisis congue, velit diam luctus mauris, dapibus iaculis lorem sapien eu lacus. Aliquam eget turpis odio. Ut felis nunc, sodales ultricies egestas ac, euismod et urna.<br /><br />Etiam neque nunc, fermentum sit amet fermentum ut, ultrices vitae neque. Maecenas nibh enim, dictum a semper et, sagittis viverra purus. Nunc ullamcorper, orci et facilisis congue, velit diam luctus mauris, dapibus iaculis lorem sapien eu lacus. Aliquam eget turpis odio. Ut felis nunc, sodales ultricies egestas ac, euismod et urna.',
+			'Description' => 'AppSettings',
+			'TinyMCEConfig' => '{theme_advanced_buttons4:"",mode:"exact",theme_advanced_statusbar_location:"",theme_advanced_toolbar_align:"left",theme_advanced_resizing:"true",plugins:"fullscreen",theme_advanced_toolbar_location:"top",theme_advanced_buttons1:"bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect,fontselect,fontsizeselect",theme_advanced_buttons2:"bullist,numlist,|,outdent,indent,|,undo,redo,|,link,unlink,anchor,image,cleanup,|,forecolor,backcolor,|,fullscreen",theme_advanced_buttons3:"",theme:"advanced", relative_urls : false, remove_script_host: false}',
+			'UseTinyMCE' => 1,
+			'ApplicationWidth' => 900,
+			'ApplicationWidth2' => 900,
+			'DefaultStyle' => 'std2',
+			'DefaultStyle2' => 'std2',
+			'NotLoggenInText' => 'Please log in.',
+			'FileFolder' => 'files',
+			'FixJSLoading' => 0,
+			'FixStatus0' => 0,
+			'ProductVersion' => '1.4.9',
+			'InitTime' => 0,
+			'ShowPoweredBy' => 0,
+			'DateFormat' => 'Y-m-d^%Y-%m-%d^\d{4}-\d{2}-\d{2}$^2012-01-25',
+			'DateTimeFormat' => 'Y-m-d H:i^%Y-%m-%d %H:%M^\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}^Y-m-d hh:mm',
+			'FixStatus02' => 0,
+			'w3cCompliant' => 0,
+			'w3cStyle' => 'easyform',
+			'FixJSLoading2' => 0,
+			'AllowMarkupInEntries' => 0,
+			'SkipWeeklyReport' => 0,
 		),
 	);
 
-	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_contacttypes');
-	$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ';' ) );
+	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_applicationsettings');
+	$count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table_name . ';' );
 	if ($count == 0) {
 		foreach ($rows as $row) {
 			$wpdb->insert($table_name, $row);
@@ -1447,6 +2427,12 @@ if (typeof(ufoForms) == \'undefined\') {
 		array(
 			'id' => 1,
 			'Description' => 'SuperAdmin',
+			'Admin' => 0,
+			'Employee' => 0,
+		),
+		array(
+			'id' => 2,
+			'Description' => 'Owner',
 			'Admin' => 0,
 			'Employee' => 0,
 		),
@@ -1459,30 +2445,42 @@ if (typeof(ufoForms) == \'undefined\') {
 	);
 
 	$table_name = EasyContactFormsDB::wptn('#wp__easycontactforms_roles');
-	$wpdb->query('DELETE FROM ' . $table_name . ' WHERE 1;' );
-	foreach ($rows as $row) {
-		$wpdb->insert($table_name, $row);
+	$count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table_name . ';' );
+	if ($count == 0) {
+		foreach ($rows as $row) {
+			$wpdb->insert($table_name, $row);
+		}
 	}
-}
+
+	require_once dirName(__FILE__) . DIRECTORY_SEPARATOR . 'easy-contact-forms-root.php';
+	require_once dirName(__FILE__) . DIRECTORY_SEPARATOR . 'easy-contact-forms-applicationsettings.php';
+	$as = EasyContactFormsApplicationSettings::getInstance();
+	$as->set('ProductVersion', '1.4.9');
+	$as->save();}
+
 
 function easycontactforms_uninstall() {
 
 	global $wpdb;
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_applicationsettings;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_contacttypes;";
+	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customformentryfiles;";
+	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customformentrystatistics;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customformfields;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customformfieldtypes;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customforms;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customforms_mailinglists;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_customformsentries;";
+	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_files;";
+	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_options;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_roles;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_users;";
 	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_acl;";
+	$sqls[] = "DROP TABLE IF EXISTS #wp__easycontactforms_sessions;";
 
 	require_once dirName(__FILE__) . DIRECTORY_SEPARATOR . 'easy-contact-forms-database.php';
 	foreach ($sqls as $sql){
 		$sql = EasyContactFormsDB::wptn($sql);
 		$wpdb->query($sql);
 	}
-	delete_option( 'easy-contact-forms_db_version' );
 }

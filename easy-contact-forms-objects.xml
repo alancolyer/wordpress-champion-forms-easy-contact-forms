@@ -1,12 +1,17 @@
 <objects>
-  <CustomFormFieldTypes/>
+  <ContactTypes/>
   <ApplicationSettings/>
-  <CustomForms>
-    <CustomFormFields/>
-    <CustomFormsEntries/>
-  </CustomForms>
-  <CustomForms_MailingLists/>
   <Users/>
   <Roles/>
-  <ContactTypes/>
+  <Files/>
+  <CustomForms>
+    <CustomFormEntryStatistics/>
+    <CustomFormFields/>
+    <CustomFormsEntries>
+      <CustomFormEntryFiles/>
+    </CustomFormsEntries>
+  </CustomForms>
+  <CustomFormFieldTypes/>
+  <CustomForms_MailingLists/>
+  <Options/>
 </objects>

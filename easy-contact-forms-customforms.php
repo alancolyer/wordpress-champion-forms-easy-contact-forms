@@ -6,13 +6,12 @@
  * 	EasyContactFormsCustomForms class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 require_once 'easy-contact-forms-baseclass.php';
@@ -47,6 +46,7 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 				'RedirectURL' => '',
 				'ShortCode' => '',
 				'Template' => 0,
+				'ObjectOwner' => 0,
 				'SubmissionSuccessText' => '',
 				'StyleSheet' => '',
 				'HTML' => '',
@@ -61,6 +61,21 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 				'FormClass' => '',
 				'FormStyle' => '',
 				'Style' => '',
+				'ConfirmationStyleSheet' => '',
+				'TotalEntries' => 0,
+				'TotalProcessedEntries' => 0,
+				'Impressions' => 0,
+				'NotificationText' => '',
+				'IncludeVisitorsAddressInReplyTo' => 0,
+				'ReplyToNameTemplate' => '',
+				'ConfirmationReplyToName' => '',
+				'ConfirmationReplyToAddress' => '',
+				'NotificationStyleSheet' => '',
+				'SendConfirmationAsText' => 0,
+				'SendNotificationAsText' => 0,
+				'FadingDelay' => 0,
+				'MessageDelay' => 0,
+				'IncludeIntoReporting' => 0,
 			);
 
 		if ($objdata) {
@@ -83,15 +98,18 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 */
 	function getDeleteStatements($id) {
 
-		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms_mailinglists WHERE CustomForms=$id;";
+		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms_mailinglists WHERE CustomForms='$id';";
 
-		$query = "SELECT id FROM #wp__easycontactforms_customformfields WHERE CustomForms=$id;";
+		$query = "SELECT id FROM #wp__easycontactforms_customformfields WHERE CustomForms='$id';";
 		EasyContactFormsDB::cDelete($query, 'CustomFormFields');
 
-		$query = "SELECT id FROM #wp__easycontactforms_customformsentries WHERE CustomForms=$id;";
+		$query = "SELECT id FROM #wp__easycontactforms_customformsentries WHERE CustomForms='$id';";
 		EasyContactFormsDB::cDelete($query, 'CustomFormsEntries');
 
-		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms WHERE id=$id;";
+		$query = "SELECT id FROM #wp__easycontactforms_customformentrystatistics WHERE CustomForms='$id';";
+		EasyContactFormsDB::cDelete($query, 'CustomFormEntryStatistics');
+
+		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms WHERE id='$id';";
 
 		return $stmts;
 
@@ -113,12 +131,12 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	function getEmptyObject($map, $fields = NULL) {
 
 		$fields = (object) array();
-		$fields->ConfirmationText = '{submission}';
 		$fields->Width = 0;
 		$fields->WidthUnit = 'px';
 		$fields->LineHeight = 10;
 		$fields->LineHeightUnit = 'px';
-		$fields->Style = 'formsstd';
+		$fields->Style = 'formscompressed';
+		$fields->IncludeVisitorsAddressInReplyTo = TRUE;
 
 		return parent::getEmptyObject($map, $fields);
 
@@ -185,7 +203,7 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		else {
 			$form->newEntry($map);
 			$response->status = 0;
-			if ($form->get('ShowSubmissionSuccess') && !$form->isEmpty(SubmissionSuccessText)) {
+			if ($form->get('ShowSubmissionSuccess') && !$form->isEmpty('SubmissionSuccessText')) {
 
 				$submitsuccessclass = $form->isEmpty('SuccessMessageClass') ? 'ufo-form-submit-success' : $form->get('SuccessMessageClass');
 
@@ -215,8 +233,23 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 */
 	function newEntry($map) {
 
-		$sign = md5(EasyContactFormsSecurityManager::getServerPwd() . $_SERVER['REMOTE_ADDR']);
-		if ($this->processSpam(!isset($map['ufo-sign']) || $map['ufo-sign'] != $sign, $map)) {
+		if ($this->processSpam(!isset($map['ufo-sign']), $map)) {
+			return;
+		}
+		$sign = isset($map['ufo-sign']) ? $map['ufo-sign'] : '';
+		$time =  substr($sign, 32);
+		if ($this->processSpam(md5(EasyContactFormsSecurityManager::getServerPwd() .''. $time) . ''. $time != $sign, $map)) {
+			return;
+		}
+		$delta = time() - intval($time);
+
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		$mintime = $as->get('FormCompletionMinTime');
+		$maxtime = $as->get('FormCompletionMaxTime');
+		if ($this->processSpam(!empty($mintime) && $delta < $mintime, $map)) {
+			return;
+		}
+		if ($this->processSpam(!empty($maxtime) && $delta > $maxtime, $map)) {
 			return;
 		}
 		$fldvalues = array();
@@ -225,7 +258,8 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 				continue;
 			}
 			$fldid = intval(EasyContactFormsUtils::cutPrefix($key, 'id-'));
-			$fldvalues[$fldid] = htmlspecialchars($value, ENT_QUOTES);
+			$value = stripslashes($value);
+			$fldvalues[$fldid] = htmlspecialchars($value);
 		}
 		if ($this->processSpam(count($fldvalues) == 0, $map)) {
 			return;
@@ -237,11 +271,32 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$s = implode(',', array_keys($fldvalues));
 
 		$query = "SELECT
+				CustomFormFields.id
+			FROM
+				#wp__easycontactforms_customformfields AS CustomFormFields
+			WHERE
+				CustomFormFields.CustomForms='$formid'
+				AND CustomFormFields.id IN ($s)";
+
+		$fields = EasyContactFormsDB::getObjects($query);
+		if ($this->processSpam(count($fields) == 0, $map)) {
+			return;
+		}
+		$cfe = EasyContactFormsClassLoader::getObject('CustomFormsEntries', true);
+		$cfe->set('Date', current_time('mysql'));
+		$cfe->set('CustomForms', $formid);
+		if (isset($map['form-pagename'])) {
+			$cfe->set('PageName', $map['form-pagename']);
+			$fpstat = EasyContactFormsClassLoader::getObject('CustomFormEntryStatistics');
+			$fpstat->increaseConversions($formid, $map['form-pagename']);
+		}
+		$map['_new_entry_id'] = $cfe->get('id');
+
+		$query = "SELECT
 				CustomFormFields.id,
 				CustomFormFields.Settings,
 				CustomFormFieldTypes.id AS tid,
 				CustomFormFieldTypes.Description,
-				CustomFormFieldTypes.Processor,
 				CustomFormFieldTypes.ValueField
 			FROM
 				#wp__easycontactforms_customformfields AS CustomFormFields
@@ -251,31 +306,34 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 						CustomFormFields.Type=CustomFormFieldTypes.id
 			WHERE
 				CustomFormFields.CustomForms='$formid'
-				AND CustomFormFields.id IN ($s)
 			ORDER BY
 				CustomFormFields.ListPosition";
 
 		$fields = EasyContactFormsDB::getObjects($query);
-		if ($this->processSpam(count($fields) == 0, $map)) {
-			return;
-		}
 		$text = new EasyContactFormsSimpleXML('<div/>');
 		$clientid = 0;
-		if (isset($map['easycontactusr']) && isset($map['easycontactusr']->id) && !empty($map['easycontactusr']->id)) {
-			$clientid = intval($map['easycontactusr']->id);
-			$text->addAttribute('userid', $clientid);
-		}
-		global $current_user;
-		$siteuserid = $current_user->ID;
-		if (!empty($siteuserid)) {
-			$siteuserid = intval($siteuserid);
+		if (!isset($map['ufo-preview'])) {
+			if (isset($map['easycontactusr']) && isset($map['easycontactusr']->id) && !empty($map['easycontactusr']->id)) {
+				$clientid = intval($map['easycontactusr']->id);
+				$text->addAttribute('userid', $clientid);
+			}
+			global $current_user;
+			$siteuserid = $current_user->ID;
+			if (!empty($siteuserid)) {
+				$siteuserid = intval($siteuserid);
+			}
 		}
 		$clientemail = '';
+		$emessagedata = (object) array();
+		$attachments = (object) array();
+		$attachments->confirmation = array();
+		$attachments->notification = array();
 		foreach($fields as $fld) {
-			$value = isset($fldvalues[$fld->id]) ? $fldvalues[$fld->id] : null;
-			if ($this->processSpam(is_null($value), $map)) {
-				return;
+			$process = $fld->ValueField || $fld->tid == 14;
+			if (!$process) {
+				continue;
 			}
+			$value = isset($fldvalues[$fld->id]) ? $fldvalues[$fld->id] : '';
 			$xml = simplexml_load_string($fld->Settings);
 			$default = $this->getFieldValue($xml, true, 'DefaultValue', 'SetDefaultValue');
 			$required = (string) $xml->Required;
@@ -288,14 +346,13 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			if ($this->processSpam($spam, $map)) {
 				return;
 			}
-			$isblank = isset($xml->IsBlankValue) && (string) $xml->IsBlankValue == 'on';
-			if ($value == $default && $isblank) {
-				continue;
-			}
-			if (!$fld->ValueField) {
+			if ($fld->tid == 14) {
 				continue;
 			}
 
+			if (!($as->get('AllowMarkupInEntries') && $fld->tid == 10)) {
+				$value = htmlspecialchars($value);
+			}
 			$validate = isset($xml->Validate) && (string) $xml->Validate == 'on';
 			if ($clientemail == '' && $fld->tid == 5 && $validate) {
 				$clientemail = $value;
@@ -303,9 +360,19 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			$fldlabel = (string) $xml->Label;
 			$fldlabel = $fldlabel == '' ? $fld->Description : $fldlabel;
 			$displayvalue = $value;
+			$displayxmlvalue = null;
 			$fld = EasyContactFormsClassLoader::getObject('CustomFormFields', true, $fld->id);
 			$phase = (object) array('index' => 6);
 			include $fld->getTMPFileName('proc');
+			if (isset($fld->_skip) && $fld->_skip === TRUE) {
+				continue;
+			}
+			$d = $this->getTemplateTag($fld->get('Description'), $fld->get('id'));
+			$d = trim($d, '{}');
+			$emessagedata->$d = $displayvalue;
+			$fldlabel = $text->prepare($fldlabel);
+			$displayvalue = $text->prepare($displayvalue);
+			$value = $text->prepare($value);
 			$iddiv = $text->addChild('div');
 			$iddiv->addAttribute('id', $fld->get('id'));
 			$h1 = $iddiv->addChild('h1', $value);
@@ -313,16 +380,18 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			$ldiv = $iddiv->addChild('div');
 			$label = $ldiv->addChild('label', $fldlabel);
 			$label->addAttribute('class', 'ufo-cform-label');
-			$iddiv->addChild('div', $displayvalue);
+			if (is_null($displayxmlvalue)) {
+				$iddiv->addChild('div', $displayvalue);
+			}
+			else {
+				$div = $iddiv->addChild('div');
+				EasyContactFormsSimpleXML::mergeXML($div, $displayxmlvalue);
+			}
 		}
-		$cfe = EasyContactFormsClassLoader::getObject('CustomFormsEntries', true);
-		$cfe->set('Date', date(DATE_ATOM));
 		$cfe->set('Content', $text->asXML());
-		$cfe->set('CustomForms', $formid);
 		if (!empty($siteuserid)) {
 			$cfe->set('SiteUser', $siteuserid);
 		}
-		$cfe->set('CustomForms', $formid);
 		$cfe->save();
 
 		unset($text->attributes()->userid);
@@ -331,7 +400,10 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			unset($child->h1);
 		}
 		$text->addAttribute('class', 'ufo-form-envelope');
-		$this->doEmailing($text->asCHTML(), $clientemail, $clientid);
+		$this->doEmailing($text->asCHTML(), $emessagedata, $clientemail, $clientid, $attachments);
+		$update = (object) array();
+		$update->TotalEntries = $this->get('TotalEntries') + 1;
+		$this->update($update, $this->get('id'));
 
 	}
 
@@ -347,6 +419,10 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 * 
 	 */
 	function processSpam($condition, $map) {
+		if ($condition && isset($map['_new_entry_id'])) {
+			$cfe = EasyContactFormsClassLoader::getObject('CustomFormsEntries');
+			$cfe->delete($map['_new_entry_id']);
+		}
 
 		return $condition;
 
@@ -398,7 +474,26 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		if (!$form) {
 			return '';
 		}
-		$newform = $form->sibling();
+		$newform = $form->copyForm();
+
+	}
+
+	/**
+	 * 	copyForm
+	 *
+	 * 	Copies the form
+	 *
+	 */
+	function copyForm() {
+
+		$formid = $this->get('id');
+		$newform = $this->sibling();
+		$newform->save();
+		$ntemplate = $newform->get('NotificationText');
+		$nstemplate = $newform->get('NotificationSubject');
+		$ctemplate = $newform->get('ConfirmationText');
+		$cstemplate = $newform->get('ConfirmationSubject');
+		$rtname = $newform->get('ReplyToNameTemplate');
 		$newformid = $newform->get('id');
 
 		$query = "SELECT
@@ -440,11 +535,73 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 				$sibling = $cfield->sibling(array('CustomForms' => $newformid, 'FieldSet' => $cntid, 'Description' => $cfield->get('Description')));
 
 				$sibling->updateTemplate();
+
+				$ntemplate = $this->getTemplateTag($cfield->get('Description'), $sibling->get('id'), $ntemplate, $cfield->get('id'));
+
+				$nstemplate = $this->getTemplateTag($cfield->get('Description'), $sibling->get('id'), $nstemplate, $cfield->get('id'));
+
+				$ctemplate = $this->getTemplateTag($cfield->get('Description'), $sibling->get('id'), $ctemplate, $cfield->get('id'));
+
+				$cstemplate = $this->getTemplateTag($cfield->get('Description'), $sibling->get('id'), $cstemplate, $cfield->get('id'));
+
+				$rtname = $this->getTemplateTag($cfield->get('Description'), $sibling->get('id'), $rtname, $cfield->get('id'));
 			}
 		}
-		$map['oid'] = $newformid;
-		$map['m'] = 'show';
-		EasyContactFormsRoot::processEvent($map);
+		$newform->set('NotificationText', $ntemplate);
+		$newform->set('NotificationSubject', $nstemplate);
+		$newform->set('ConfirmationText', $ctemplate);
+		$newform->set('ConfirmationSubject', $cstemplate);
+		$newform->set('ReplyToNameTemplate', $rtname);
+		$newform->save();
+		return $newform;
+
+	}
+
+	/**
+	 * 	getAvailableTemplates
+	 *
+	 * @param  $map
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function getAvailableTemplates($map) {
+
+		$ds = DIRECTORY_SEPARATOR;
+		$html = EasyContactFormsRoot::api('form-template-showcase', (object)array(), FALSE);
+		if (is_wp_error($html)) {
+
+			echo '<div style="background-color:#f33;width:350px;margin:50px auto;text-align:center;color:#fff;padding:40px;">Somethig is wrong. Please try again later</div>';
+
+			return;
+		}
+		$index = '';
+		$js = "config = {};";
+		$js .= "config.url='" . admin_url( 'admin-ajax.php' ) . "';";
+		$js .= "config.initial = {t:'CustomForms', m:'getAvailableTemplates'};";
+		$js .= "config.bodyid = 'tpl-main-wrapper-body';";
+		$js .= "config.resources = {};";
+		$js .= "var appManConfig = config;";
+		$js .= "var ajaxurl = config.url;";
+
+		$index .= "<html>";
+		$index .= "<head>";
+		$index .= "<title>Templates. Easy Contact Forms</title>";
+		$index .= "<script type='text/javascript'>$js</script>";
+
+		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/js/jquery.js'></script>";
+
+		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/js/json.js'></script>";
+
+		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/js/as.js'></script>";
+
+		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/easy-contact-formshtml.1.4.9.js'></script>";
+
+		$index .= $html;
+		$index .= "</html>";
+
+		echo $index;
 
 	}
 
@@ -457,11 +614,26 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 */
 	function getAvaliableStyles() {
 
+		$current = $this->get('Style');;
+		return $this->basicGetAvaliableStyles($current);
+
+	}
+
+	/**
+	 * 	Lists installed client side form styles
+	 *
+	 * @param  $current
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function basicGetAvaliableStyles($current) {
+
 		$ds = DIRECTORY_SEPARATOR;
 		$styleroot = dirName(__FILE__) . $ds . 'forms' . $ds . 'styles';
 		$dirs = array();
 		$dir = dir($styleroot);
-		$current = $this->get('Style');;
 		while(($cdir = $dir->read()) !== false) {
 			if($cdir != '.' && $cdir != '..' && is_dir($styleroot . $ds . $cdir)) {
 				$selected = $cdir == $current ? ' selected' : '';
@@ -469,7 +641,97 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			}
 		}
 		$dir->close();
+
+		$styleroot = str_replace('easy-contact-forms', 'easycontact_templates', plugin_dir_path(__FILE__)) . 'easycontact_templates.php';
+
+		if (is_file($styleroot)) {
+			require_once $styleroot;
+			$dirs = easycontact_templates_getavaliablestyles($dirs, $current);
+		}
 		return implode('', $dirs);
+
+	}
+
+	/**
+	 * 	Lists available fields
+	 *
+	 * @param  $elId
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function getEmailTemplateLinks($elId) {
+
+		echo '<div style="margin:10px 0">';
+		echo EasyContactFormsT::get('ClickLinkBelowToInsertFieldIntoTemplate');
+		echo '</div>';
+		$cf = $this->get('id');
+
+		$query = "SELECT
+				CustomFormFields.id,
+				CustomFormFields.Description,
+				CustomFormFields.Type
+			FROM
+				#wp__easycontactforms_customformfields AS CustomFormFields
+			INNER JOIN
+				#wp__easycontactforms_customformfieldtypes AS CustomFormFieldTypes
+					ON
+						CustomFormFields.Type=CustomFormFieldTypes.id
+			WHERE
+				CustomFormFieldTypes.ValueField=TRUE
+				AND CustomFormFields.CustomForms=$cf
+			ORDER BY
+				CustomFormFields.ListPosition";
+
+		$fields = EasyContactFormsDB::getObjects($query);
+
+		$txt = '';
+		echo '<table class="vtable ufo-template-links" style="border:0">';
+		foreach ($fields as $fld) {
+			$d = $this->getTemplateTag($fld->Description, $fld->id);
+			$d = trim($d, '{}');
+			EasyContactFormsApplicationSettings::getEmailTemplateRow($elId, $d, $fld->Description, TRUE, TRUE);
+		}
+		echo '</table>';
+
+	}
+
+	/**
+	 * 	Prepares a template tag
+	 *
+	 * @param  $d
+	 * 
+	 * @param  $fldid
+	 * 
+	 * @param  $template
+	 * 
+	 * @param  $oldid
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function getTemplateTag($d, $fldid, $template = -1, $oldid = NULL) {
+
+		$d = str_replace(' ', '', $d);
+		$d = str_replace('"', '', $d);
+		$d = str_replace('\'', '', $d);
+		$d = str_replace('&', '', $d);
+		$d = str_replace('>', '', $d);
+		$d = str_replace('<', '', $d);
+		$d = str_replace('.', '', $d);
+		$d = str_replace('}', '', $d);
+		$d = str_replace('{', '', $d);
+		$ftempalte = $fldid . '.' . $d;
+		$ftemplate = '{' . $ftempalte . '}';
+		if ($template == -1) {
+			return $ftemplate;
+		}
+		$oftempalte = $oldid . '.' . $d;
+		$oftemplate = '{' . $oftempalte . '}';
+		$template = str_replace($oftemplate, $ftemplate, '' . $template);
+		return $template;
 
 	}
 
@@ -496,24 +758,23 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$map = EasyContactFormsSecurityManager::getRights($map);
 		$form->user = $map['easycontactusr'];
 		if (!$cfid) {
+			if (isset($map['pn'])){
+				$form->pageName = $map['pn'];
+				$fpstat = EasyContactFormsClassLoader::getObject('CustomFormEntryStatistics');
+				$fpstat->increaseImpressions($form);
+			}
 			$html = $form->preprocess();
+			$form->set('Impressions', $form->get('Impressions') + 1);
+			$form->save();
 		}
 		else {
 			$html = $form->preprocess($map);
 			if (!isset($form->sendBack) || $form->sendBack == FALSE) {
 				$form->newEntry($map);
 				$html = array();
-				if (!$form->isEmpty('Style')) {
-					ob_start();
-					$ds = DIRECTORY_SEPARATOR;
-
-					require_once dirName(__FILE__) . $ds . 'forms' . $ds . 'styles' . $ds . $form->get('Style') . $ds . 'easy-contact-forms-getstyle.php';
-
-					$html[] = ob_get_contents();
-					ob_end_clean();
-				}
+				$html[] = $form->loadStyle();
 				if (!$form->isEmpty('StyleSheet')) {
-					$html[] = '<style>' . $form->get('StyleSheet') . '</style>';
+					$html[] = '<style type="text/css">' . $form->get('StyleSheet') . '</style>';
 				}
 
 				$submitsuccessclass = $form->isEmpty('SuccessMessageClass') ? 'ufo-form-submit-success' : $form->get('SuccessMessageClass');
@@ -562,6 +823,217 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	}
 
 	/**
+	 * 	getStyleSpec
+	 *
+	 *
+	 * @return
+	 * 
+	 */
+	function getStyleSpec() {
+
+		$stylespec = (object) array();
+		$stylespec->name = false;
+		$stylespec->split = false;
+		$stylespec->counter = 0;
+		$stylespec->multi = false;
+		$stylespec->splitheader = false;
+		if ($this->isEmpty('Style')) {
+		 return $stylespec;
+		}
+		$style = $this->get('Style');
+		$style = explode('_', $style);
+		if (count($style) == 1) {
+		 return $stylespec;
+		}
+		if ($style[0] != 'easycontact') {
+		 return $stylespec;
+		}
+		$stylespec->name = $style[1];
+		$stylespec->split = true;
+		if (count($style) == 2) {
+		 return $stylespec;
+		}
+		$stylespec->multi = true;
+		return $stylespec;
+
+	}
+
+	/**
+	 * 	installTemplate
+	 *
+	 * @param  $map
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function installTemplate($map) {
+
+		$args = $map['a'];
+		if (function_exists('gzinflate')) {
+			$args['inflate'] = true;
+		}
+		$apiresponse = EasyContactFormsRoot::api('form-template-install', $args);
+
+		if (is_wp_error($apiresponse)) {
+			$this->processAPIError($apiresponse->get_error_message());
+		}
+		else if ($apiresponse->error == 1) {
+			$this->processAPIError($apiresponse->text);
+		}
+
+		$tpl = $apiresponse->text;
+		$tpl = base64_decode($tpl);
+		if (function_exists('gzinflate')) {
+			$tpl = gzinflate($tpl);
+		}
+		$tpl = unserialize($tpl);
+
+		if (!$tpl) {
+			$this->processAPIError('Wrong response from the API');
+		}
+
+		$tplfields = array();
+		$tplfields[] = 'NotificationText';
+		$tplfields[] = 'NotificationSubject';
+		$tplfields[] = 'ConfirmationText';
+		$tplfields[] = 'ConfirmationSubject';
+		$tplfields[] = 'ReplyToNameTemplate';
+
+		$form = EasyContactFormsClassLoader::getObject('CustomForms', true);
+		$formid = $form->get('id');
+		$form->setData($tpl->form);
+		$form->set('id', $formid);
+		$form->save();
+
+		$tplfieldvalues = array();
+
+		foreach($tplfields as $fld) {
+			$tplfieldvalues[$fld] = $form->get($fld);
+		}
+
+		$mapping = array();
+
+		foreach($tpl->c as $fld) {
+			$oldfldid = $fld->id;
+			$field = EasyContactFormsClassLoader::getObject('CustomFormFields', true);
+			$fieldid = $field->get('id');
+			$mapping[$oldfldid] = $fieldid;
+			$field->setData($fld);
+			$field->set('id', $fieldid);
+			$field->set('CustomForms', $formid);
+			$field->set('FieldSet', $fieldid);
+			$field->save();
+			$field->updateTemplate();
+		}
+
+		foreach($tpl->f as $fld) {
+			$oldfldid = $fld->id;
+			$field = EasyContactFormsClassLoader::getObject('CustomFormFields', true);
+			$fieldid = $field->get('id');
+			$field->setData($fld);
+			$field->set('id', $fieldid);
+			$field->set('CustomForms', $formid);
+			$field->set('FieldSet', $mapping[$fld->FieldSet]);
+			$field->save();
+			$field->updateTemplate();
+
+			foreach($tplfieldvalues as $name => $value) {
+				$tplfieldvalues[$name] = $this->getTemplateTag($field->get('Description'), $fieldid, $value, $oldfldid);
+			}
+		}
+
+		foreach($tplfieldvalues as $name => $value) {
+			$form->set($name, $value);
+		}
+
+		$currentuser = get_current_user_id();
+		$query = "SELECT Users.id FROM #wp__easycontactforms_users AS Users WHERE Users.CMSId = '$currentuser'";
+		$userid = EasyContactFormsDB::getValue($query);
+		if (!is_null($userid)) {
+			$form->set('ObjectOwner', $userid);
+		}
+
+		$form->save();
+
+		$response = (object) array();
+		$response->error = 0;
+		$response->message = 'The template is installed';
+		$response = json_encode($response);
+		echo $response;
+
+	}
+
+	/**
+	 * 	processAPIError
+	 *
+	 * @param  $message
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function processAPIError($message) {
+
+		$response = (object) array();
+		$response->error = 1;
+		$response->message = $message;
+		$response = json_encode($response);
+		echo $response;
+		exit();
+
+	}
+
+	/**
+	 * 	loads form style
+	 *
+	 *
+	 * @return
+	 * 
+	 */
+	function loadStyle() {
+
+		if ($this->isEmpty('Style')) {
+			return '';
+		}
+		$style = $this->get('Style');
+		return $this->basicLoadStyle($style);
+
+	}
+
+	/**
+	 * 	basicLoadStyle
+	 *
+	 * @param  $style
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function basicLoadStyle($style) {
+
+		$ds = DIRECTORY_SEPARATOR;
+		$styleroot = dirName(__FILE__) . $ds . 'forms' . $ds . 'styles' . $ds . $style;
+		ob_start();
+		if (is_dir($styleroot)) {
+			require $styleroot . $ds . 'easy-contact-forms-getstyle.php';
+		}
+		else {
+
+			$styleroot = str_replace('easy-contact-forms', 'easycontact_templates', plugin_dir_path(__FILE__)) . 'easycontact_templates.php';
+
+			if (is_file($styleroot)) {
+				require_once $styleroot;
+				easycontact_templates_loadstyle($style);
+			}
+		}
+		$html = ob_get_contents();
+		ob_end_clean();
+		return $html;
+
+	}
+
+	/**
 	 * 	preprocess
 	 *
 	 * @param  $pvarmap
@@ -583,11 +1055,17 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$flds = EasyContactFormsDB::getObjects($query);
 		$varmap = is_null($pvarmap) ? array() : $pvarmap;
 		$currentuser = $this->user->id;
+
 		foreach ($flds as $fldid) {
 			$fld = EasyContactFormsClassLoader::getObject('CustomFormFields', true, $fldid->id);
 			$varmap = $this->preprocessField($fld, $varmap, !is_null($pvarmap));
 		}
 		$html = $this->get('HTML');
+
+		$previewflag =  isset($this->preview) && $this->preview ? '<input type="hidden" id="ufo-preview" value="true"/>' : '';
+
+		$html = str_replace('{preview}', $previewflag, $html);
+
 		foreach ($varmap as $key=>$value){
 			if (!is_string($value)) {
 				continue;
@@ -595,8 +1073,17 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			$html = str_replace('{' . $key. '}', $value, $html);
 		}
 
-		$html = str_replace('{ufosignature}', md5(EasyContactFormsSecurityManager::getServerPwd() . $_SERVER['REMOTE_ADDR']), $html);
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		if ($as->get('w3cCompliant')) {
+			$html = str_replace('{__requesturi}', htmlspecialchars($_SERVER['REQUEST_URI']), $html);
+		}
 
+		$pagename = isset($this->pageName) ? $this->pageName : '';
+		$html = str_replace('{__pagename}', $pagename, $html);
+
+		$time = time();
+		$sign = md5(EasyContactFormsSecurityManager::getServerPwd() . '' . $time) . '' . $time;
+		$html = str_replace('{ufosignature}', $sign, $html);
 		$errors = '';
 		if (isset($this->errors) && count($this->errors) > 0){
 			$errors = array();
@@ -642,14 +1129,18 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		if (empty($varmap['id-' . $fldid])) {
 			$varmap['id-' . $fldid] = $this->getFieldValue($xml, true, 'DefaultValue', 'SetDefaultValue');
 		}
+		$ruo = (string) $xml->RegistredUsersOptions;
+		$done = false;
 		if (!$validate) {
 			$phase = (object) array('index' => 3);
 			include $fld->getTMPFileName('proc');
 		}
+		if ($done) {
+			return $varmap;
+		}
 		if (!isset($xml->SetContactOptions)) {
 			return $varmap;
 		}
-		$ruo = (string) $xml->RegistredUsersOptions;
 
 		$test1 = $this->getFieldValue($xml, false, 'LinkToAppField', 'SetContactOptions', $ruo != 'none', !empty($currentuser));
 
@@ -730,6 +1221,7 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 */
 	function validate($fld, $varmap) {
 
+		$fldid = $fld->get('id');
 		$txml = simplexml_load_string($fld->get('Template'));
 		$validation = (string) $txml->Validation;
 		if (empty($validation)) {
@@ -737,14 +1229,16 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			include $fld->getTMPFileName('proc');
 			return $varmap;
 		}
-		list($first, $second) = explode('ufoForms.validate(', $validation, 2);
-		list($validation, $second) = explode(');', $second, 2);
-		$config = json_decode($validation);
+		$config = null;
+		if (strpos($validation, 'ufoFormsConfig.validations.push(') !== FALSE) {
+			list($first, $second) = explode('ufoFormsConfig.validations.push(', $validation, 2);
+			list($validation, $second) = explode(');', $second, 2);
+			$config = json_decode($validation);
+		}
 		if (is_null($config)) {
 			return $varmap;
 		}
-		$fldid = $fld->get('id');
-		$fldvalue = $varmap['id-' . $fldid];
+		$fldvalue = isset($varmap['id-' . $fldid]) ? $varmap['id-' . $fldid] : NULL;
 		$valid = NULL;
 		$phase = (object) array('index' => 5);
 		include $fld->getTMPFileName('proc');
@@ -790,11 +1284,11 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			return TRUE;
 		}
 
-		if (!isset($config->Required) && $this->isEmptyValue($fldvalue, $config)) {
+		if (!isset($config->Required) && $this->isEmptyValue($fld, $fldvalue, $config)) {
 			return TRUE;
 		}
 
-		if ($handler == 'required' && $this->isEmptyValue($fldvalue, $config)) {
+		if ($handler == 'required' && $this->isEmptyValue($fld, $fldvalue, $config)) {
 			$this->processInvalid($fld, 'required', $config);
 			return FALSE;
 		}
@@ -824,6 +1318,11 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$re['currency']='/^-?(?:0|[1-9]\d{0,2}(?:,?\d{3})*)(?:\.\d+)?$/';
 		$re['integer']='/^\-?[0-9]+$/';
 		$re['numeric']='/^[0-9]+$/';
+		$re['phonenumber']='/^(\+{0,1}\d{1,2})*\s*(\(?\d{3}\)?\s*)*\d{3}(-{0,1}|\s{0,1})\d{2}(-{0,1}|\s{0,1})\d{2}$/';
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		if (!$as->isEmpty('PhoneRegEx')) {
+			$re['phonenumber']='/^' . $as->get('PhoneRegEx') . '/';
+		}
 
 		if (isset($re[$handler])) {
 			$re = $re[$handler];
@@ -857,13 +1356,16 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		if (!isset($this->errors)) {
 			$this->errors = array();
 		}
-		$this->errors[$fld->get('Description')] = $config->RequiredMessage;
+		$errorMsg = $config->RequiredMessage;
+		$this->errors[$fld->get('Description')] = $errorMsg;
 
 	}
 
 	/**
 	 * 	isEmptyValue
 	 *
+	 * @param  $fld
+	 * 
 	 * @param  $fldvalue
 	 * 
 	 * @param  $config
@@ -872,10 +1374,15 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 * @return
 	 * 
 	 */
-	function isEmptyValue($fldvalue, $config) {
+	function isEmptyValue($fld, $fldvalue, $config) {
 
-		if ($config->isDefaultBlank && $config->defaultValue == $fldvalue) {
+		if (isset($config->isDefaultBlank) && $config->isDefaultBlank && isset($config->defaultValue) && $config->defaultValue == $fldvalue) {
+
 			return TRUE;
+		}
+
+		if ($fld->get('Type') == 11 && ('' . $fldvalue == '0')) {
+			return FALSE;
 		}
 
 		if (empty($fldvalue)) {
@@ -891,20 +1398,24 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 *
 	 * @param  $submission
 	 * 
+	 * @param  $emessagedata
+	 * 
 	 * @param  $clientemail
 	 * 
 	 * @param  $clientid
+	 * 
+	 * @param  $attachments
 	 * 
 	 *
 	 * @return
 	 * 
 	 */
-	function doEmailing($submission, $clientemail, $clientid) {
+	function doEmailing($submission, $emessagedata, $clientemail, $clientid, $attachments) {
 
 		require_once 'easy-contact-forms-backoffice.php';
 		$bo = new EasyContactFormsBackOffice();
 
-		$submission = '<style>label.ufo-cform-label {font-weight:bold;padding:10px 0 3px 0;}</style>' . $submission;
+		$submission = htmlspecialchars_decode($submission);
 
 		if ($this->get('SendConfirmation')) {
 			if (empty($clientemail) && !empty($clientid)) {
@@ -913,14 +1424,35 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			}
 			if (!empty($clientemail)) {
 				$message = (object) array();
+				$message->ishtml = $this->get('SendConfirmationAsText') ? false : true;
 				$message->subject = $this->get('ConfirmationSubject');
-				$message->body = str_replace('{submission}', $submission, $this->get('ConfirmationText'));
-				$message->ishtml = true;
+				$message->body = '' . $this->get('ConfirmationText');
+				$message = EasyContactFormsBackOffice::fillInTemplate($message, $emessagedata);
+				$message->body = str_replace('{submission}', $submission, $message->body);
+				if (!$this->isEmpty('ConfirmationStyleSheet') && $message->ishtml) {
+					$message->body = '<style>' . $this->get('ConfirmationStyleSheet') . '</style>' . $message->body;
+				}
+				$message->body = stripslashes($message->body);
 				$sender = (object) array();
 				$sender->name = $this->get('SendFrom');
 				$email = $this->get('SendFromAddress');
+				if (empty($email)) {
+					$email = get_option('admin_email');
+				}
+				if (!$this->isEmpty('ConfirmationReplyToName') || !$this->isEmpty('ConfirmationReplyToAddress')) {
+					$message->replyto = (object) array();
+					if (!$this->isEmpty('ConfirmationReplyToName')) {
+						$message->replyto->name = $this->get('ConfirmationReplyToName');
+						if (empty($sender->name)) {
+							$sender->name = $this->get('ConfirmationReplyToName');
+						}
+					}
+					if (!$this->isEmpty('ConfirmationReplyToAddress')) {
+						$message->replyto->email = $this->get('ConfirmationReplyToAddress');
+					}
+				}
 				$list = array($clientemail);
-				$bo->send($message, $list, $sender, $email);
+				$bo->send($message, $list, $sender, $email, $attachments->confirmation);
 			}
 		}
 
@@ -929,13 +1461,58 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			return;
 		}
 		$message = (object) array();
+		$message->ishtml = $this->get('SendNotificationAsText') ? false : true;
 		$message->subject = $this->get('NotificationSubject');
-		$message->body = $submission;
-		$message->ishtml = true;
+		$message->body = '' . $this->get('NotificationText');
+		$message = EasyContactFormsBackOffice::fillInTemplate($message, $emessagedata);
+		if($this->isEmpty('NotificationText') || $this->get('NotificationText') == '<p></p>') {
+			if ($message->ishtml) {
+
+				$submission = '<style>div.ufo-form-envelope div{padding:2px 10px;}label.ufo-cform-label {font-weight:bold;margin:2px -10px;}</style>' . $submission;
+
+			}
+			else {
+				$submisstiontext = array();
+				$xml = simplexml_load_string($submission);
+				foreach ($xml->children() as $parent) {
+					foreach ($parent->children() as $child) {
+						$label = (string) $child->label;
+						$str = (string)$child;
+						if ($label != '') { 
+							$submisstiontext[] = '  ' . $label;
+						}
+						else { 
+							$submisstiontext[] = '    ' . $str;
+						}
+					}
+				}
+				$submission = implode(chr(13).chr(10), $submisstiontext);
+			}
+			$message->body = $submission;
+		}
+		$message->body = stripslashes($message->body);
+		if (!$this->isEmpty('NotificationStyleSheet') && $message->ishtml) {
+			$message->body = '<style>' . $this->get('NotificationStyleSheet') . '</style>' . $message->body;
+		}
+		$replyto = $this->get('IncludeVisitorsAddressInReplyTo') && !empty($clientemail);
+		if ($replyto) {
+			$message->replyto = (object) array();
+			$message->replyto->email = $clientemail;
+			if (!$this->isEmpty('ReplyToNameTemplate')) {
+				$fake = (object) array();
+				$fake->subject = '';
+				$fake->body = $this->get('ReplyToNameTemplate');
+				$fake = EasyContactFormsBackOffice::fillInTemplate($fake, $emessagedata);
+				$message->replyto->name = htmlspecialchars_decode($fake->body);
+			}
+		}
 		$sender = (object) array();
 		$sender->name = $this->get('Description');
-		$sender->email = EasyContactFormsApplicationSettings::getInstance()->get('SendFrom');;
-		$bo->send($message, $recps, $sender);
+		$sender->email = EasyContactFormsApplicationSettings::getInstance()->get('SendFrom');
+		if (empty($sender->email)) {
+			$sender->email = get_option('admin_email');
+		}
+		$bo->send($message, $recps, $sender, '', $attachments->notification);
 
 	}
 
@@ -949,12 +1526,10 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 	 * 
 	 */
 	function preview($map) {
+
 		$ds = DIRECTORY_SEPARATOR;
 
 		$fid = intval($map['oid']);
-		$map['ufo-skipoutput']=1;
-		$formhtml = $this->refreshForm($map);
-		$spec = $this->getfilespec($fid);
 
 		$query = "SELECT
 				CustomForms.id,
@@ -965,7 +1540,7 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$availableforms = EasyContactFormsDB::getObjects($query);
 
 		$links = array();
-			$links[] = "<ul style='width:90%;float:right;' class='ufo-tab-header ufo-tab-left'>";
+		$links[] = "<ul style='width:90%;float:right;' class='ufo-tab-header ufo-tab-left'>";
 		foreach ($availableforms as $aform) {
 			$links[] = "<li>";
 			$active = $aform->id == $fid ? 'ufo-active' : '';
@@ -977,13 +1552,14 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 			$links[] = "</ul>";
 		$links = implode('', $links);
 
-		$index = "<html>";
+		$index = '';
 		$js = "config = {};";
 		$js .= "config.url='" . admin_url( 'admin-ajax.php' ) . "';";
 		$js .= "config.initial = {t:'CustomForms', m:'preview'};";
 		$js .= "config.bodyid = 'ufo-formpreview-wrapper';";
 		$js .= "config.resources = {};";
 		$js .= "var appManConfig = config;";
+		$js .= "var ajaxurl = config.url;";
 
 		$index .= "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>";
 
@@ -993,11 +1569,14 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 
 		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/js/jquery.js'></script>";
 
+		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/js/json.js'></script>";
+
 		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/js/as.js'></script>";
 
-		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/easy-contact-formshtml.js'></script>";
+		$index .= "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/easy-contact-formshtml.1.4.9.js'></script>";
 
-		$index .= "<style>";
+		$index .= "<script>$(document).ready(function(){ufoCf.refreshForm(this, {$fid});});</script>";
+		$index .= "<style type='text/css'>";
 		$index .= "*{margin:0;padding:0}";
 		$index .= "html, body {height:100%;width:100%;overflow:hidden}";
 		$index .= "table {height:100%;width:100%;table-layout:static;border-collapse:collapse}";
@@ -1005,8 +1584,6 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$index .= "iframe {height:100%;width:100%}";
 		$index .= ".content {height:100%}";
 		$index .= "</style>";
-		$index .= "</head>";
-		$index .= "<body>";
 		$styleName = EasyContactFormsApplicationSettings::getInstance()->get('DefaultStyle2');
 		ob_start();
 
@@ -1014,20 +1591,20 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 
 		$index .= ob_get_contents();
 		ob_end_clean();
+		$index .= "</head>";
+		$index .= "<body>";
 		$index .= "<table id='ufo-formpreview-wrapper'><tr>";
 		$index .= "<td style='width:15%;vertical-align:top;padding:10px 0;background:#f5f5f5;border-right:1px solid #bbb'>";
 		$index .= $links;
 		$index .= "</td>";
 		$index .= "<td style='width:85%;'>";
 
-		$index .= "<iframe frameborder=0 src='{$spec->fileurl}' class='ufo-form-preview ufo-id-link' style='overflow:auto' id='ufo-form-preview'></iframe>";
+		$index .= "<iframe frameborder=0 class='ufo-form-preview ufo-id-link' style='overflow:auto' name='ufo-form-preview' id='ufo-form-preview'></iframe>";
 
 		$index .= "</td>";
-		$index .= "<tr></table></html>";
+		$index .= "</tr></table></body></html>";
 
-		EasyContactFormsUtils::createFolder($spec->dir);
-		EasyContactFormsUtils::overwritefile($spec->dir . $ds . 'frame.html', $index);
-		echo json_encode(array('url' => $spec->webfolder . '/frame.html'));
+		echo $index;
 
 	}
 
@@ -1071,15 +1648,18 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 
 		$fid = intval($map['oid']);
 		$form = new EasyContactFormsCustomForms(true, $fid);
-		$spec = $this->getfilespec($fid);
-		$admin = isset($map['admin']);
-		if (!$admin == 0) {
-			$form->user = EasyContactFormsSecurityManager::getGuest();
-		}
+		$form->user = EasyContactFormsSecurityManager::getGuest();
+		$form->preview = true;
 		$html = $form->preprocess();
+
 		$text = array();
 
-		$text[] = "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/easy-contact-forms-forms.js'></script>";
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		if ($as->get('w3cCompliant') && !$as->isEmpty('w3cStyle')) {
+			$text[] = $form->basicLoadStyle($as->get('w3cStyle'));
+		}
+
+		$text[] = "<script type='text/javascript' src='" . EASYCONTACTFORMS__engineWebAppDirectory . "/easy-contact-forms-forms.1.4.9.js'></script>";
 
 		$text[] = "<table align=center style='height:100%'><tr>";
 		$text[] = "<td style='padding-top:50px;vertical-align:top'>";
@@ -1087,13 +1667,104 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$text[] = "</td>";
 		$text[] = "</tr></table>";
 		$text = implode('', $text);
-
-		EasyContactFormsUtils::createFolder($spec->dir);
-		EasyContactFormsUtils::overwritefile($spec->filepath, $text);
 		if (!isset($map['ufo-skipoutput'])) {
-			echo json_encode(array('url' => $spec->fileurl));
+			echo $text;
 			exit;
 		}
+
+	}
+
+	/**
+	 * 	resetStatistics
+	 *
+	 * @param  $map
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function resetStatistics($map) {
+
+		$fid = intval($map['oid']);
+		if (empty($fid)) {
+			return;
+		}
+		$form = EasyContactFormsClassLoader::getObject('CustomForms', true, $fid);
+		$form->set('Impressions', 0);
+		$form->set('TotalEntries', 0);
+		$form->set('TotalProcessedEntries', 0);
+		$form->save();
+		$map['m'] = 'show';
+		EasyContactFormsRoot::processEvent($map);
+
+	}
+
+	/**
+	 * 	adds necessary style tags
+	 *
+	 * @param  $array
+	 * 
+	 * @param  &$stylespec
+	 * 
+	 * @param  $phase
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function templateHTML($array, &$stylespec, $phase) {
+
+		if (!$stylespec->split) {
+			return $array;
+		}
+		switch ($phase) {
+			case 1: {
+				if (!$stylespec->multi) {
+
+					$array[] = '<div class="ufoformsplit ' . $stylespec->name . '"><div class="ufospheader"><div class="ufospl"><div class="ufospl">';
+
+				}
+				break;
+			}
+			case 2: {
+				if (!$stylespec->multi && !$stylespec->splitheader) {
+					$stylespec->splitheader = true;
+					$array[] = '</div></div></div>';
+					$array[] = '<div class="ufospbody"><div class="ufospl"><div class="ufospl"><div class="ufospl">';
+					$array[] = '<div class="ufoformbodyint">';
+				}
+				break;
+			}
+			case 3: {
+				if (!$stylespec->multi) {
+					$array[] = '</div>';
+					$array[] = '</div></div></div></div>';
+					$array[] = '</div>';
+				}
+				break;
+			}
+			case 4: {
+				if ($stylespec->multi) {
+					$stylespec->counter++;
+					$array[] = "<div class='ufoformsplit {$stylespec->name} {$stylespec->name}{$stylespec->counter}'>";
+					$array[] = '<div class="ufospheader"><div class="ufospl"><div class="ufospl">';
+					$array[] = '</div></div></div>';
+					$array[] = '<div class="ufospbody"><div class="ufospl"><div class="ufospl"><div class="ufospl">';
+					$array[] = '<div class="ufoformbodyint">';
+				}
+				break;
+			}
+			case 6: {
+				if ($stylespec->multi) {
+					$array[] = '</div>';
+					$array[] = '</div></div></div></div>';
+					$array[] = '</div>';
+				}
+				break;
+			}
+		}
+
+		return $array;
 
 	}
 
@@ -1112,9 +1783,19 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		$request = EasyContactFormsUtils::parseRequest($request, 'SendConfirmation', 'boolean');
 		$request = EasyContactFormsUtils::parseRequest($request, 'Redirect', 'boolean');
 		$request = EasyContactFormsUtils::parseRequest($request, 'Template', 'boolean');
+		$request = EasyContactFormsUtils::parseRequest($request, 'ObjectOwner', 'int');
 		$request = EasyContactFormsUtils::parseRequest($request, 'ShowSubmissionSuccess', 'boolean');
 		$request = EasyContactFormsUtils::parseRequest($request, 'Width', 'int');
 		$request = EasyContactFormsUtils::parseRequest($request, 'LineHeight', 'int');
+		$request = EasyContactFormsUtils::parseRequest($request, 'TotalEntries', 'int');
+		$request = EasyContactFormsUtils::parseRequest($request, 'TotalProcessedEntries', 'int');
+		$request = EasyContactFormsUtils::parseRequest($request, 'Impressions', 'int');
+		$request = EasyContactFormsUtils::parseRequest($request, 'IncludeVisitorsAddressInReplyTo', 'boolean');
+		$request = EasyContactFormsUtils::parseRequest($request, 'SendConfirmationAsText', 'boolean');
+		$request = EasyContactFormsUtils::parseRequest($request, 'SendNotificationAsText', 'boolean');
+		$request = EasyContactFormsUtils::parseRequest($request, 'FadingDelay', 'int');
+		$request = EasyContactFormsUtils::parseRequest($request, 'MessageDelay', 'int');
+		$request = EasyContactFormsUtils::parseRequest($request, 'IncludeIntoReporting', 'boolean');
 
 		parent::update($request, $id);
 
@@ -1155,7 +1836,7 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 					ON
 						FieldSetListPosition.id=CustomFormFields.FieldSet
 			WHERE
-				CustomFormFields.CustomForms=$cf
+				CustomFormFields.CustomForms='$cf'
 			ORDER BY
 				FieldSetListPosition,
 				Container DESC,
@@ -1163,23 +1844,29 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 
 		$fields = EasyContactFormsDB::getObjects($query);
 		$form = EasyContactFormsClassLoader::getObject('CustomForms', true, $cf);
+		$stylespec = $form->getStyleSpec();
 
 		$divmargin =  $form->isEmpty('LineHeight') ? '' : "margin-top:{$form->get('LineHeight')}{$form->get('LineHeightUnit')};";
 
 		$rows = array();
 		$containertag = '';
 		$containerbottom = '';
+		$containercf = '';
 		$containerbottominside = '';
 		$iscontainer = false;
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		$w3c = $as->get('w3cCompliant');
 
 		$vjs = array();
 		$items = array();
+		$ufovalidators = FALSE;
 		foreach ($fields as $fld) {
 		$fld = EasyContactFormsClassLoader::getObject('CustomFormFields', true, $fld->id);
 		$phase = (object) array('index' => 8);
 		include $fld->getTMPFileName('proc');
 			$text = $fld->get('Template');
 			$xml = simplexml_load_string($text);
+			if (!$xml) continue;
 			$entry = (object) array();
 			$iscontainer = false;
 			foreach($xml->children() as $child) {
@@ -1187,18 +1874,23 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 				if ($name == 'Container'){
 					$iscontainer = true;
 					if (!$containertag == '') {
-		//						$rows[] = "</div>";
 						if (!empty($containerbottominside)) {
 							$rows[] = $containerbottominside;
 						}
 						$rows[] = "</$containertag>";
+						$rows = $form->templateHTML($rows, $stylespec, 6);
+						$rows = $form->templateHTML($rows, $stylespec, 2);
 						if (!empty($containerbottom)) {
 							$rows[] = $containerbottom;
+						}
+						if (!empty($containercf)) {
+							$rows[] = $containercf;
 						}
 					}
 					$containerbottom = '';
 					$containerbottominside = '';
 					$containertag = (string) $child->attributes()->containertag;
+					$containercf = (string) $child->attributes()->addcf == 'on' ? "<div style='clear:both;height:1px'></div>" : '';
 				}
 
 				$iscenter = ($name == 'Container' || $name == 'Input' || $name == 'Validation');
@@ -1228,19 +1920,21 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 				if (isset($entry->{'bottom-inside'})) {
 					$containerbottominside = implode('', $entry->{'bottom-inside'}->list);
 				}
+				$rows = $form->templateHTML($rows, $stylespec, 4);
 				$rows[] = implode('', $entry->center->list);
 
 				if (isset($entry->{'top-inside'})) {
 					$rows[] = implode('', $entry->{'top-inside'}->list);
 				}
-		//				$rows[] = '<div>';
 			}
 			else {
 
 				$fldid = $fld->get('id');
+				$typeid = $fld->get('Type');
+
 				$rowclass = empty($entry->center->rowclass) ? '' : ' ' . $entry->center->rowclass;
 
-				$rows[] = "<div class='ufo-customform-row ufo-row-{$fldid}{$rowclass}' style='{$divmargin}{display-{$fldid}}'>";
+				$rows[] = "<div class='ufo-fieldtype-{$typeid} ufo-customform-row ufo-row-{$fldid}{$rowclass}' style='{$divmargin}{display-{$fldid}}'>";
 
 				if (isset($entry->top)) {
 					$entry->top->width = $entry->center->width;
@@ -1265,70 +1959,53 @@ class EasyContactFormsCustomForms extends EasyContactFormsBase {
 		if (!empty($containerbottominside)) {
 			$rows[] = $containerbottominside;
 		}
+		$rows = $form->templateHTML($rows, $stylespec, 6);
 		$rows[] = "</$containertag>";
+						$rows = $form->templateHTML($rows, $stylespec, 2);
 		if (!empty($containerbottom)) {
 			$rows[] = $containerbottom;
+		}
+		if (!empty($containercf)) {
+			$rows[] = $containercf;
 		}
 		$rows = implode('', $rows);
 		$html = array();
 		$html[] = "<script type='text/javascript'>";
-		$html[] = "var ufobaseurl = '" . admin_url( 'admin-ajax.php' ) . "';";
-
-		$html[] = "
-if (typeof(ufoForms) == 'undefined') {
-	ufoForms = new function() {
-		this.addEvent = function(elem, evType, fn) {
-			if (elem.addEventListener) {
-				elem.addEventListener(evType, fn, false);
-			}
-			else if (elem.attachEvent) {
-				elem.attachEvent('on' + evType, fn);
-			}
-			else {
-				elem['on' + evType] = fn;
-			}
+		$html[] = "if (typeof(ecfconfig) == 'undefined'){var ecfconfig={};}";
+		$html[] = "ecfconfig[{$cf}]={};";
+		if (!$form->isEmpty('FadingDelay')) {
+			$html[] = "ecfconfig[{$cf}].fadeDelay='" . $form->get('FadingDelay') . "';";
 		}
-		this.docReady = function(func){
-			this.addEvent(document, 'readystatechange', function(){
-				if (document.readyState == 'complete'){
-					func();
-				}
-			});
+		if (!$form->isEmpty('MessageDelay')) {
+			$html[] = "ecfconfig[{$cf}].messageDelay='" . $form->get('MessageDelay') . "';";
 		}
+		$ajaxurl = $as->get('FixStatus0') ? home_url('wp-admin/admin-ajax.php') : admin_url('admin-ajax.php');
+		$ajaxurl = $as->get('FixStatus02') ? '/wp-admin/admin-ajax.php' : $ajaxurl;
+		$html[] = "var ufobaseurl =  '{$ajaxurl}';";
 
-		this.validate = function (config){
-			this.docReady(function(){ufoForms.addValidation(config)});
+		$html[] = "if (typeof(ufoFormsConfig) == 'undefined') {var ufoFormsConfig = {};ufoFormsConfig.submits = [];ufoFormsConfig.resets = [];ufoFormsConfig.validations = [];}";
+
+		if (!$as->isEmpty('PhoneRegEx')) {
+			$html[] = "ufoFormsConfig.phonenumberre = /^" . $as->get('PhoneRegEx') . "/;";
 		}
-
-		this.submitButton = function (config){
-			this.docReady(function(){ufoForms.addSubmit(config)});
+		if ($as->get('w3cCompliant')) {
+			$html[] = "ufoFormsConfig.w2c=true;";
 		}
-
-		this.resetButton = function (config){
-			this.docReady(function(){ufoForms.addReset(config)});
-		}
-		this.addValidation = function (config){};
-		this.addSubmit = function (config){};
-		this.addReset = function (config){};
-
-	}	
-}";
-
 		$html[] = "</script>";
-		if (!$form->isEmpty('Style')) {
-			$ds = DIRECTORY_SEPARATOR;
-			ob_start();
-
-			require_once dirName(__FILE__) . $ds . 'forms' . $ds . 'styles' . $ds . $form->get('Style') . $ds . 'easy-contact-forms-getstyle.php';
-
-			$html[] = ob_get_contents();
-			ob_end_clean();
+		if (!$as->get('w3cCompliant')) {
+			$html[] = $form->loadStyle();
+			$stylesheet = $form->getStyle();
+			if (!empty($stylesheet)) {
+				$html[] = "<style type='text/css'>{$stylesheet}</style>";
+			}
 		}
-		$stylesheet = $form->getStyle();
-		if (!empty($stylesheet)) {
-			$html[] = "<style>{$stylesheet}</style>";
+		$formclass = array();
+		$formclass[] = 'ufo-form';
+		if (!$form->isEmpty('FormClass')) {
+			$formclass[] = $form->get('FormClass');
 		}
-		$formclass = $form->isEmpty('FormClass') ? '' : " class='{$form->get('FormClass')}'";
+		$formclass = implode(' ', $formclass);
+		$formclass = " class='{$formclass}'";
 		$formstyle = array();
 		if (!$form->isEmpty('FormStyle')) {
 			$formstyle[] =  $form->get('FormStyle');
@@ -1343,15 +2020,31 @@ if (typeof(ufoForms) == 'undefined') {
 			$formstyle = '';
 		}
 		$html[] = "<div{$formclass}{$formstyle} id='ufo-form-id-$cf'>";
-		$html[] = "<noscript><form method='POST'><input type='hidden' name='cf-no-script' value='1'></noscript>";
-		$html[] = "<input type='hidden' value='ufo-form-id-$cf' name='hidden-$cf' id='ufo-form-hidden-$cf'>";
-		$html[] = "<input type='hidden' value='{ufosignature}' name='ufo-sign' id='ufo-sign'>";
+		if ($as->get('w3cCompliant')) {
+
+			$html[] = "<form method='post' action='{__requesturi}'><input type='hidden' id='cf-no-script-{$cf}' name='cf-no-script' value='1'/>";
+
+		}
+		else {
+			$html[] = "<noscript><form method='post'><input type='hidden' name='cf-no-script' value='1'/></noscript>";
+		}
+		$html[] = "<input type='hidden' value='ufo-form-id-$cf' name='hidden-$cf' id='ufo-form-hidden-$cf'/>";
+		$html[] = "<input type='hidden' value='{__pagename}' name='ufo-form-pagename' id='ufo-form-pagename'/>";
+		$html[] = "{preview}";
+		$html[] = "<input type='hidden' value='{ufosignature}' name='ufo-sign' id='ufo-sign'/>";
+		$html = $form->templateHTML($html, $stylespec, 1);
 		$html[] = $rows;
+		$html = $form->templateHTML($html, $stylespec, 3);
 		$html[] = "<div id='ufo-form-id-$cf-message'></div>";
-		$html[] = "<noscript></form></noscript>";
+		if ($as->get('w3cCompliant')) {
+			$html[] = "</form>";
+		}
+		else {
+			$html[] = "<noscript></form></noscript>";
+		}
 		$html[] = "</div>";
 		if (count($vjs) > 0) {
-			$html[] = '<script>' . implode('', $vjs) . '</script>';
+			$html[] = '<script type="text/javascript">' . implode('', $vjs) . '</script>';
 		}
 		$txt = implode('', $html);
 		$html = array('HTML' => $txt, 'ShortCode' => '[easy_contact_forms fid=' . $cf . ']');
@@ -1380,6 +2073,8 @@ if (typeof(ufoForms) == 'undefined') {
 	 */
 	function addRow($rows, $center, $left, $right, $fldid, $rowindex) {
 
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		$wrappertag = $as->get('w3cCompliant') ? 'div' : 'span';
 		$prefix = 'ufo-cell';
 		$centerclass = $prefix.'-center';
 		$leftclass = $prefix.'-left';
@@ -1391,7 +2086,7 @@ if (typeof(ufoForms) == 'undefined') {
 		}
 		$width = $center->width != '' ? " style='width:{$center->width}'" : '';
 		$center = implode('', $center->list);
-		$center = "<span class='{$centerclass}'{$width} id='{$cellspec}-center'>{$center}</span>";
+		$center = "<{$wrappertag} class='{$centerclass}'{$width} id='{$cellspec}-center'>{$center}</{$wrappertag}>";
 		if (!$left) {
 			$left = '';
 		}
@@ -1402,7 +2097,7 @@ if (typeof(ufoForms) == 'undefined') {
 			else {
 				$left = "<p style='display:none'></p>";
 			}
-			$left = "<span class='{$leftclass}' id='{$cellspec}-left'>{$left}</span>";
+			$left = "<{$wrappertag} class='{$leftclass}' id='{$cellspec}-left'>{$left}</{$wrappertag}>";
 		}
 		if (!$right) {
 			$right = '';
@@ -1414,7 +2109,7 @@ if (typeof(ufoForms) == 'undefined') {
 		else {
 			$right = "<p style='display:none'></p>";
 		}
-			$right = "<span class='{$rightclass}' id='{$cellspec}-right'>{$right}</span>";
+			$right = "<{$wrappertag} class='{$rightclass}' id='{$cellspec}-right'>{$right}</{$wrappertag}>";
 		}
 
 		$rows[] = "<div class='{$cellspec}-row' id='{$cellspec}'>" . $left . $center . $right . "</div>";
@@ -1478,6 +2173,14 @@ if (typeof(ufoForms) == 'undefined') {
 				$this->copy($dispmap);
 				return NULL;
 
+			case 'getAvailableTemplates':
+				$this->getAvailableTemplates($dispmap);
+				return NULL;
+
+			case 'installTemplate':
+				$this->installTemplate($dispmap);
+				return NULL;
+
 			case 'preview':
 				$this->preview($dispmap);
 				return NULL;
@@ -1486,11 +2189,38 @@ if (typeof(ufoForms) == 'undefined') {
 				$this->refreshForm($dispmap);
 				return NULL;
 
+			case 'resetStatistics':
+				$this->resetStatistics($dispmap);
+				return NULL;
+
 			case 'val':
 				$this->val($dispmap);
 				return NULL;
 
 			default : return $dispmap;
+		}
+
+	}
+
+	/**
+	 * 	getViews. Overrides EasyContactFormsBase::getViews()
+	 *
+	 * 	selects an object view to show on the client side
+	 *
+	 * @param array $vmap
+	 * 	request data
+	 */
+	function getViews($vmap) {
+
+		$viewname = parent::getViews($vmap);
+
+		switch ($viewname) {
+
+			case 'managemain':
+				return $this->getManageMainView($vmap);
+				break;
+
+			default:return '';
 		}
 
 	}
@@ -1508,62 +2238,113 @@ if (typeof(ufoForms) == 'undefined') {
 		$fields = array();
 		$fields[] = 'id';
 		$fields[] = 'Description';
-		$fields[] = 'NotificationSubject';
 		$fields[] = 'ShortCode';
 		$fields[] = 'SendConfirmation';
-		$fields[] = 'SendFrom';
-		$fields[] = 'SendFromAddress';
 		$fields[] = 'ConfirmationSubject';
+		$fields[] = 'SendFrom';
+		$fields[] = 'ConfirmationReplyToAddress';
+		$fields[] = 'SendFromAddress';
+		$fields[] = 'ConfirmationReplyToName';
 		$fields[] = 'ConfirmationText';
 		$fields[] = 'Redirect';
 		$fields[] = 'RedirectURL';
+		$fields[] = 'IncludeIntoReporting';
+		$fields[] = 'Impressions';
+		$fields[] = 'TotalEntries';
+		$fields[] = 'TotalProcessedEntries';
 		$fields[] = 'ShowSubmissionSuccess';
 		$fields[] = 'SubmissionSuccessText';
+		$fields[] = 'NotificationSubject';
+		$fields[] = 'ObjectOwner';
+		$fields[] = 'IncludeVisitorsAddressInReplyTo';
+		$fields[] = 'ReplyToNameTemplate';
+		$fields[] = 'NotificationText';
 		$fields[] = 'StyleSheet';
+		$fields[] = 'ConfirmationStyleSheet';
+		$fields[] = 'NotificationStyleSheet';
 		$fields[] = 'Width';
+		$fields[] = 'WidthUnit';
 		$fields[] = 'LineHeight';
+		$fields[] = 'LineHeightUnit';
 		$fields[] = 'Style';
 		$fields[] = 'FormClass';
 		$fields[] = 'FormStyle';
 		$fields[] = 'SuccessMessageClass';
 		$fields[] = 'FailureMessageClass';
-		$fields[] = 'Width';
-		$fields[] = 'WidthUnit';
-		$fields[] = 'LineHeight';
-		$fields[] = 'LineHeightUnit';
+		$fields[] = 'SendConfirmationAsText';
+		$fields[] = 'SendNotificationAsText';
+		$fields[] = 'FadingDelay';
+		$fields[] = 'MessageDelay';
 
 		$obj = $this->formInit($formmap, $fields);
 		$obj->set('Description', htmlspecialchars($obj->get('Description'), ENT_QUOTES));
-		$obj->set('NotificationSubject', htmlspecialchars($obj->get('NotificationSubject'), ENT_QUOTES));
 		$obj->set('ShortCode', htmlspecialchars($obj->get('ShortCode'), ENT_QUOTES));
 
 		$obj->SendConfirmationChecked
 			= $obj->get('SendConfirmation') ? 'checked' : '';
 		$obj->SendConfirmation = $obj->get('SendConfirmation') ? 'on' : 'off';
 
-		$obj->set('SendFrom', htmlspecialchars($obj->get('SendFrom'), ENT_QUOTES));
-		$obj->set('SendFromAddress', htmlspecialchars($obj->get('SendFromAddress'), ENT_QUOTES));
 		$obj->set('ConfirmationSubject', htmlspecialchars($obj->get('ConfirmationSubject'), ENT_QUOTES));
+		$obj->set('SendFrom', htmlspecialchars($obj->get('SendFrom'), ENT_QUOTES));
+		$obj->set('ConfirmationReplyToAddress', htmlspecialchars($obj->get('ConfirmationReplyToAddress'), ENT_QUOTES));
+		$obj->set('SendFromAddress', htmlspecialchars($obj->get('SendFromAddress'), ENT_QUOTES));
+		$obj->set('ConfirmationReplyToName', htmlspecialchars($obj->get('ConfirmationReplyToName'), ENT_QUOTES));
 		$obj->set('ConfirmationText', htmlspecialchars($obj->get('ConfirmationText')));
 
 		$obj->RedirectChecked = $obj->get('Redirect') ? 'checked' : '';
 		$obj->Redirect = $obj->get('Redirect') ? 'on' : 'off';
+		$obj->RedirectURLDisabled = $obj->get('Redirect') ? '' : 'disabled';
 
 		$obj->set('RedirectURL', htmlspecialchars($obj->get('RedirectURL'), ENT_QUOTES));
+
+		$obj->IncludeIntoReportingChecked
+			= $obj->get('IncludeIntoReporting') ? 'checked' : '';
+		$obj->IncludeIntoReporting = $obj->get('IncludeIntoReporting') ? 'on' : 'off';
 
 		$obj->ShowSubmissionSuccessChecked
 			= $obj->get('ShowSubmissionSuccess') ? 'checked' : '';
 		$obj->ShowSubmissionSuccess
 			= $obj->get('ShowSubmissionSuccess') ? 'on' : 'off';
+		$obj->SubmissionSuccessTextDisabled
+			= $obj->get('ShowSubmissionSuccess') ? '' : 'disabled';
 
 		$obj->set('SubmissionSuccessText', htmlspecialchars($obj->get('SubmissionSuccessText')));
+		$obj->set('NotificationSubject', htmlspecialchars($obj->get('NotificationSubject'), ENT_QUOTES));
+
+		$obj->ObjectOwner = (object) array();
+		$obj->ObjectOwner->view = $obj;
+		$obj->ObjectOwner->field = 'ObjectOwner';
+		$obj->ObjectOwner->type = 'Users';
+		$obj->ObjectOwner->config['m2'] = 'getUserASList';
+		$obj->ObjectOwner->config['t'] = 'Users';
+		$obj->ObjectOwner->asparams['listItemClass'] = 'ufo-user-list-item';
+
+		$obj->IncludeVisitorsAddressInReplyToChecked
+			= $obj->get('IncludeVisitorsAddressInReplyTo') ? 'checked' : '';
+		$obj->IncludeVisitorsAddressInReplyTo
+			= $obj->get('IncludeVisitorsAddressInReplyTo') ? 'on' : 'off';
+
+		$obj->set('ReplyToNameTemplate', htmlspecialchars($obj->get('ReplyToNameTemplate'), ENT_QUOTES));
+		$obj->set('NotificationText', htmlspecialchars($obj->get('NotificationText')));
 		$obj->set('StyleSheet', htmlspecialchars($obj->get('StyleSheet')));
+		$obj->set('ConfirmationStyleSheet', htmlspecialchars($obj->get('ConfirmationStyleSheet')));
+		$obj->set('NotificationStyleSheet', htmlspecialchars($obj->get('NotificationStyleSheet')));
+		$obj->set('WidthUnit', htmlspecialchars($obj->get('WidthUnit'), ENT_QUOTES));
+		$obj->set('LineHeightUnit', htmlspecialchars($obj->get('LineHeightUnit'), ENT_QUOTES));
 		$obj->set('FormClass', htmlspecialchars($obj->get('FormClass'), ENT_QUOTES));
 		$obj->set('FormStyle', htmlspecialchars($obj->get('FormStyle')));
 		$obj->set('SuccessMessageClass', htmlspecialchars($obj->get('SuccessMessageClass'), ENT_QUOTES));
 		$obj->set('FailureMessageClass', htmlspecialchars($obj->get('FailureMessageClass'), ENT_QUOTES));
-		$obj->set('WidthUnit', htmlspecialchars($obj->get('WidthUnit'), ENT_QUOTES));
-		$obj->set('LineHeightUnit', htmlspecialchars($obj->get('LineHeightUnit'), ENT_QUOTES));
+
+		$obj->SendConfirmationAsTextChecked
+			= $obj->get('SendConfirmationAsText') ? 'checked' : '';
+		$obj->SendConfirmationAsText
+			= $obj->get('SendConfirmationAsText') ? 'on' : 'off';
+
+		$obj->SendNotificationAsTextChecked
+			= $obj->get('SendNotificationAsText') ? 'checked' : '';
+		$obj->SendNotificationAsText
+			= $obj->get('SendNotificationAsText') ? 'on' : 'off';
 
 		?>
 		<input type='hidden' class='ufostddata' id='t' value='<?php echo $obj->type;?>'>
@@ -1585,46 +2366,23 @@ if (typeof(ufoForms) == 'undefined') {
 	function getMainView($viewmap) {
 
 		$spar = $this->getOrder($viewmap);
-
-		$orderby = EasyContactFormsDB::getOrderBy(array('id', 'Description', 'ShortCode', 'Style'), $spar, "CustomForms.Description");
+		$orderby = EasyContactFormsDB::getOrderBy(array('id', 'Description', 'ShortCode'), $spar, "CustomForms.Description");
 
 		$rparams = $this->getFilter($viewmap);
 		$viewfilters = array();
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'id', 'int');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'Description');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'NotificationSubject');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'SendFrom');
-
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'SendConfirmation', 'boolean');
-
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'ConfirmationSubject');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'ConfirmationText');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'Redirect', 'boolean');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'RedirectURL');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'ShortCode');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'Template', 'boolean');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'SubmissionSuccessText');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'StyleSheet');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'SendFromAddress');
-
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'ShowSubmissionSuccess', 'boolean');
-
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'SuccessMessageClass');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'FailureMessageClass');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'Width', 'int');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'LineHeight', 'int');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'WidthUnit');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'LineHeightUnit');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'FormClass');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'FormStyle');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'Style');
+		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'ObjectOwner', 'int');
 		EasyContactFormsRoot::mDelete('CustomForms', $viewmap);
 
 		$query = "SELECT
 				CustomForms.id,
 				CustomForms.Description,
-				CustomForms.ShortCode,
-				CustomForms.Style
+				CustomForms.ShortCode
 			FROM
 				#wp__easycontactforms_customforms AS CustomForms";
 
@@ -1634,10 +2392,58 @@ if (typeof(ufoForms) == 'undefined') {
 
 		$resultset = EasyContactFormsDB::select($query, $viewfilters, $orderby, $this);
 
+		$this->ObjectOwner = (object) array();
+		$this->ObjectOwner->view = $this;
+		$this->ObjectOwner->field = 'ObjectOwner';
+		$this->ObjectOwner->filter = TRUE;
+		$this->ObjectOwner->config['m2'] = 'getUserASList';
+		$this->ObjectOwner->config['t'] = 'Users';
+		$this->ObjectOwner->asparams['listItemClass'] = 'ufo-user-list-item';
+		$this->ObjectOwner->inpstyle = " style='width:130px;'";
+
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='CustomForms'><?php
 
-		require_once 'views/easy-contact-forms-customformsmainview.php';
+		include 'views/easy-contact-forms-customformsmainview.php';
+
+	}
+
+	/**
+	 * 	getManageMainView
+	 *
+	 * 	prepares the view data and finally passes it to the html template
+	 *
+	 * @param array $viewmap
+	 * 	request data
+	 */
+	function getManageMainView($viewmap) {
+
+		$spar = $this->getOrder($viewmap);
+		$orderby = EasyContactFormsDB::getOrderBy(array('id', 'Description'), $spar, "CustomForms.Description");
+
+		$rparams = $this->getFilter($viewmap);
+		$viewfilters = array();
+		$viewfilters = EasyContactFormsDB::getMTMFilter($viewmap, $viewfilters, 'CustomForms');
+		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'id', 'int');
+		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'CustomForms.', 'Description');
+
+		$query = "SELECT
+				CustomForms.id,
+				CustomForms.Description
+			FROM
+				#wp__easycontactforms_customforms AS CustomForms";
+
+		$this->start = isset($viewmap['start']) ? intval($viewmap['start']) : 0;
+		$this->limit = isset($viewmap['limit']) ? intval($viewmap['limit']) : 10;
+		$this->rowCount = EasyContactFormsDB::getRowCount($query, $viewfilters);
+
+		$resultset = EasyContactFormsDB::select($query, $viewfilters, $orderby, $this);
+
+		$this->showlist = FALSE;
+		$obj = $this;
+		?><input type='hidden' name='t' id='t' value='CustomForms'><?php
+
+		include 'views/easy-contact-forms-customformsmanagemainview.php';
 
 	}
 

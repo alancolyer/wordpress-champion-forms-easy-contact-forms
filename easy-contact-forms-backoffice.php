@@ -6,13 +6,12 @@
  * 	EasyContactFormsBackOffice class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -22,38 +21,6 @@
  *
  */
 class EasyContactFormsBackOffice {
-
-	/**
-	 * 	sendNotification
-	 *
-	 * 	sends an email message in response to user actions
-	 *
-	 * @param int $uid
-	 * 	user id
-	 * @param string $type
-	 * 	object type
-	 * @param int $oid
-	 * 	object id
-	 * @param string $text
-	 * 	message text
-	 */
-	function sendNotification($uid, $type, $oid, $text) {
-
-		$sender = $this->getSenderData($uid);
-		if (!$sender) {
-			return;
-		}
-		$emaillist = $this->getListMemberEmails($type, $oid);
-		if (sizeof($emaillist) == 0) {
-			return;
-		}
-		$object = $this->prepareObject($type, $oid);
-		$template = $this->getTemplate($type);
-		$message = $this->fillInTemplate($template, $object);
-		$message = $this->merge($message, $text);
-		$this->send($message, $emaillist, $sender);
-
-	}
 
 	/**
 	 * 	getSenderData
@@ -143,84 +110,7 @@ class EasyContactFormsBackOffice {
 	 * 	an initialized object
 	 */
 	function prepareObject($type, $id) {
-
-		$tk_map = array();
-
-		$tk_map['Orders'] = "SELECT
-				Orders.id AS id,
-				Orders.Description AS Title,
-				CONCAT(Users.Description, ' ', Users.Name) AS ObjectOwner,
-				Orders.Date AS Date,
-				CONCAT(Users2.Description, ' ', Users2.Name) AS Client,
-				OrderStatuses.Description AS Status,
-				Orders.Price AS Price,
-				Orders.Notes AS Notes,
-				Orders.History AS History,
-				Orders.OrderField3 AS OrderField3,
-				Orders.OrderField4 AS OrderField4
-			FROM
-				#wp__easycontactforms_orders AS Orders
-			LEFT JOIN
-				#wp__easycontactforms_users AS Users
-					ON
-						Users.id=Orders.ObjectOwner
-			LEFT JOIN
-				#wp__easycontactforms_users AS Users2
-					ON
-						Users2.id=Orders.Users
-			LEFT JOIN
-				#wp__easycontactforms_orderstatuses AS OrderStatuses
-					ON
-						OrderStatuses.id=Orders.Status
-			WHERE
-				Orders.id=:id";
-
-		$tk_map['Tasks'] = "SELECT
-				Tasks.id AS id,
-				Tasks.Description AS Title,
-				CONCAT(Users.Description, ' ', Users.Name) AS Responsible,
-				Orders.Description AS Order,
-				Priorities.Description AS Priority,
-				TaskStatuses.Description AS Status,
-				Tasks.Notes AS Notes,
-				Tasks.Deadline AS Deadline,
-				Tasks.CompletedDate AS CompletedDate,
-				TaskTypes.Description AS Type,
-				Tasks.History AS History
-			FROM
-				#wp__easycontactforms_tasks AS Tasks
-			LEFT JOIN
-				#wp__easycontactforms_users AS Users
-					ON
-						Users.id=Tasks.ObjectOwner
-			LEFT JOIN
-				#wp__easycontactforms_orders AS Orders
-					ON
-						Orders.id=Tasks.Orders
-			LEFT JOIN
-				#wp__easycontactforms_priorities AS Priorities
-					ON
-						Priorities.id=Tasks.Priority
-			LEFT JOIN
-				#wp__easycontactforms_taskstatuses AS TaskStatuses
-					ON
-						TaskStatuses.id=Tasks.Status
-			LEFT JOIN
-				#wp__easycontactforms_tasktypes AS TaskTypes
-					ON
-						TaskTypes.id=Tasks.Type
-			WHERE
-				Tasks.id=:id";
-
-		$query = $tk_map[$type];
-		if (!isset($query)) {
-			return (object) array();
-		}
-		$fvalues = array();
-		$fvalues['fvalues'][':id'] = intval($id);
-		$result = EasyContactFormsDB::select($query, $fvalues);
-		return $result[0];
-
+		return (object) array();
 	}
 
 	/**
@@ -269,14 +159,71 @@ class EasyContactFormsBackOffice {
 			$fields = get_object_vars($object);
 			foreach ($fields as $fname => $fvalue) {
 				$value = (
-					EasyContactFormsUtils::endsWith($fname, 'date') ||
-					EasyContactFormsUtils::endsWith($fname, 'deadline')) ?
-					EasyContactFormsUtils::getDate($fvalue, 'date') :
+					(EasyContactFormsUtils::endsWith(strtolower($fname), 'date') ||
+					EasyContactFormsUtils::endsWith(strtolower($fname), 'deadline')) &&
+					is_numeric($fvalue)) ?
+					EasyContactFormsUtils::getDate($fvalue) :
 					$fvalue;
-				$template->body = str_replace('{' . $fname . '}', $value, $template->body);
+				if (isset($template->ishtml) && ($template->ishtml)) {
+					$value = nl2br('' . $value);
+				}
+				if (isset($template->body)) {
+					$fldcheck = EasyContactFormsBackOffice::fldTemplateReplace($template->body, $fname, $value);
+					if (!$fldcheck) {
+						$template->body = str_replace('{' . $fname . '}', $value, $template->body);
+					}
+					else {
+						$template->body = $fldcheck;
+					}
+				}
+				if (isset($template->subject)) {
+					$fldcheck = EasyContactFormsBackOffice::fldTemplateReplace($template->subject, $fname, $value);
+					if (!$fldcheck) {
+						$template->subject = str_replace('{' . $fname . '}', $value, $template->body);
+					}
+					else {
+						$template->subject = $fldcheck;
+					}
+				}
 			}
 		}
 		return $template;
+
+	}
+
+	/**
+	 * 	fldTemplateReplace
+	 *
+	 * 	replaces fld teplate with value
+	 *
+	 * @param  $text
+	 * 
+	 * @param  $template
+	 * 
+	 * @param  $value
+	 * 
+	 *
+	 * @return object
+	 * 
+	 */
+	function fldTemplateReplace($text, $template, $value) {
+
+		$prefix = explode('.', $template);
+		if (count($prefix) != 2) {
+			return false;
+		}
+		$prefix = $prefix[0];
+		if ('' . intval($prefix) != '' . $prefix) {
+			return false;
+		}
+		$pattern = '#\{' . $prefix . '.(.+?)\}#s';
+		$value = str_replace('$', '\$', $value);
+		$content = preg_replace(
+			$pattern,
+			$value,
+			$text
+		);
+		return $content;
 
 	}
 
@@ -320,9 +267,10 @@ class EasyContactFormsBackOffice {
 	 * 	sender data
 	 * @param string $email
 	 * 	custom email address to use instead of default
+	 * @param  $attachments
+	 * 
 	 */
-	function send($message, $emaillist, $sender, $email = '') {
-
+	function send($message, $emaillist, $sender, $email = '', $attachments = array()) {
 
 		if ($email == '') {
 			$email = EasyContactFormsApplicationSettings::getInstance()->get('SendFrom');
@@ -330,95 +278,30 @@ class EasyContactFormsBackOffice {
 		if ($email == '') {
 			$email = $sender->email;
 		}
-		$headers = $email != '' ? "From: $sender->name <$email>\r\n\\" : '';
+		$headers = $email != '' ? "From: $sender->name <$email>\r\n" : '';
+		if (isset($message->replyto)) {
+			$headers .= 'Reply-to: ';
+			if (isset($message->replyto->name)) {
+				$headers .= $message->replyto->name;
+				
+			}
+			if (isset($message->replyto->email)) {
+				$headeremail = $message->replyto->email;
+				$headers .= "<{$headeremail}>";
+				
+			}
+			$headers .= "\n";
+		}
 
 		if ($message->ishtml) {
-			add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
+			add_filter('wp_mail_content_type', create_function('', 'return "text/html"; '));
 		}
-
+		else {
+			add_filter('wp_mail_content_type', create_function('', 'return "text/plain"; '));
+		}
+		global $easycontactforms_request;
+		$easycontactforms_request->attachment = $attachments;
 		wp_mail($emaillist, $message->subject, $message->body, $headers);
-
-	}
-
-	/**
-	 * 	processHistory
-	 *
-	 * 	performs status/comment/history processing
-	 *
-	 * @param array $fieldvalues
-	 * 	request field data
-	 * @param string $type
-	 * 	object type
-	 * @param int $oid
-	 * 	object id
-	 * @param int $uid
-	 * 	current user id
-	 */
-	function processHistory($fieldvalues, $type, $oid, $uid) {
-
-		$object = EasyContactFormsClassLoader::getObject($type, TRUE, $oid);
-
-		$is_st_changed = isset($fieldvalues->Status) &&
-			($fieldvalues->Status != $object->get('Status'));
-		$not_on_sn_chng_var = $type . '_NotifyOnStatusChange';
-
-		$not_on_st_change = EasyContactFormsApplicationSettings::getInstance()->get($not_on_sn_chng_var);
-
-		$is_n_comment = isset($fieldvalues->Comment) && !empty($fieldvalues->Comment);
-		$not_on_new_comment_var = $type . '_NotifyOnNewComment';
-		$not_on_new_comment = EasyContactFormsApplicationSettings::getInstance()->get($not_on_new_comment_var);
-
-		$send_message = ($is_n_comment && $not_on_new_comment ) ||
-			($is_st_changed && $not_on_st_change);
-
-		if (! $is_st_changed && ! $is_n_comment) {
-			return $fieldvalues;
-		}
-
-		$type_status_map = array();
-
-		$objname = EasyContactFormsDB::getTableName($type_status_map[$type]);
-
-		$status = '';
-		if (isset($objname)) {
-			$sid = $is_st_changed ?
-				intval($fieldvalues->Status) : $object->get('Status');
-			$status = EasyContactFormsDB::getValue("SELECT Description FROM $objname WHERE id='$sid'");
-			$status .= ' -- ';
-		}
-
-		$user = EasyContactFormsDB::getValue(
-				"SELECT CONCAT(Description,' ',Name) FROM #wp__easycontactforms_users WHERE id='$uid'");
-
-		$text = (object) array('body' => '', 'subject' => '');
-
-		$comment = '';
-		$delimeter = '-- ' . $user . ' -- ' . $status .
-			date(EasyContactFormsT::get('DateTimeFormat')) . ' --<br/>';
-
-		if ($is_n_comment) {
-			$comment = $fieldvalues->Comment;
-			unset($fieldvalues->Comment);
-			$text->body = $comment;
-			$stemplate = EasyContactFormsApplicationSettings::getInstance()->get('NewCommentSubject');
-			$text->subject = sprintf(
-				$stemplate,
-				$type, $object->get('Description'), $status);
-		}
-		if ($is_st_changed) {
-			$stemplate = EasyContactFormsApplicationSettings::getInstance()->get('StatusChangeSubject');
-			$text->subject = sprintf(
-				$stemplate,
-				$type, $object->get('Description'), $status);
-		}
-		$history = $delimeter . $text->body . '<br/>' . $object->get('History');
-		$fieldvalues->History = $history;
-
-		if ($send_message) {
-			$this->sendNotification($uid, $type, $oid, $text);
-		}
-
-		return $fieldvalues;
 
 	}
 

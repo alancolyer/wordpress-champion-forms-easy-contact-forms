@@ -6,13 +6,12 @@
  * 	EasyContactFormsCustomFormFieldTypes class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 require_once 'easy-contact-forms-baseclass.php';
@@ -38,11 +37,8 @@ class EasyContactFormsCustomFormFieldTypes extends EasyContactFormsBase {
 		$this->fieldmap = array(
 				'id' => NULL,
 				'Description' => '',
-				'Form' => '',
-				'Template' => '',
 				'CssClass' => '',
 				'Settings' => '',
-				'Processor' => '',
 				'Signature' => '',
 				'ListPosition' => 0,
 				'ValueField' => 0,
@@ -69,7 +65,7 @@ class EasyContactFormsCustomFormFieldTypes extends EasyContactFormsBase {
 	 */
 	function getDeleteStatements($id) {
 
-		$stmts[] = "DELETE FROM #wp__easycontactforms_customformfieldtypes WHERE id=$id;";
+		$stmts[] = "DELETE FROM #wp__easycontactforms_customformfieldtypes WHERE id='$id';";
 
 		return $stmts;
 

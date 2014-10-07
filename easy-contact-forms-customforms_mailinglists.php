@@ -6,13 +6,12 @@
  * 	EasyContactFormsCustomForms_MailingLists class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 require_once 'easy-contact-forms-baseclass.php';
@@ -56,7 +55,7 @@ class EasyContactFormsCustomForms_MailingLists extends EasyContactFormsBase {
 	 */
 	function getDeleteStatements($id) {
 
-		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms_mailinglists WHERE id=$id;";
+		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms_mailinglists WHERE id='$id';";
 
 		return $stmts;
 
@@ -133,7 +132,7 @@ class EasyContactFormsCustomForms_MailingLists extends EasyContactFormsBase {
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='CustomForms_MailingLists'><?php
 
-		require_once 'views/easy-contact-forms-customforms_mailinglistscustomformsmainview.php';
+		include 'views/easy-contact-forms-customforms_mailinglistscustomformsmainview.php';
 
 	}
 
@@ -180,7 +179,7 @@ class EasyContactFormsCustomForms_MailingLists extends EasyContactFormsBase {
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='CustomForms_MailingLists'><?php
 
-		require_once 'views/easy-contact-forms-customforms_mailinglistsusersmainview.php';
+		include 'views/easy-contact-forms-customforms_mailinglistsusersmainview.php';
 
 	}
 

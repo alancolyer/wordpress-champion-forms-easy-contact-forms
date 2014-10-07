@@ -6,13 +6,12 @@
  * 	EasyContactFormsSecurityManager class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -81,7 +80,7 @@ class EasyContactFormsSecurityManager {
 		}
 		if (isset($_ssmap['m'])) {
 			$m = $_ssmap['m'];
-			$sm = addcslashes($m, "\\\'\"&;%<>");
+			$sm = addcslashes($m, chr(34) . chr(39) . chr(92) . "&;%<>");
 			$sm = str_replace(' ' , '', $sm);
 			if ($sm != $m) {
 				unset($_ssmap['m']);
@@ -143,7 +142,7 @@ class EasyContactFormsSecurityManager {
 	 */
 	function roleObjectCheck($_cmmap) {
 
-		$objecttype = $_cmmap['t'];
+		$obj = EasyContactFormsClassLoader::getObject($_cmmap['t']);
 		$userrole = $_cmmap['easycontactusr']->role->Description;
 
 		$query = "SELECT
@@ -151,7 +150,7 @@ class EasyContactFormsSecurityManager {
 			FROM
 				#wp__easycontactforms_acl
 			WHERE
-				objtype='$objecttype'
+				objtype='{$obj->type}'
 				AND role='$userrole'";
 
 		$value = EasyContactFormsDB::getValue($query);
@@ -455,14 +454,18 @@ class EasyContactFormsSecurityManager {
 		if (!isset($map['sid'])) {
 			return NULL;
 		}
-		$sid = $map['sid'];
-		$dirname = EasyContactFormsSecurityManager::getSessionDir();
-		$filename = md5($sid . EasyContactFormsSecurityManager::getServerPwd());
-		$filename = $dirname . DIRECTORY_SEPARATOR . $filename;
-		if (!is_file($filename)) {
+		$sessid = mysql_real_escape_string($map['sid']);
+		if ($sessid != $map['sid']) {
 			return NULL;
 		}
-		$xml = simplexml_load_file($filename);
+		if (strlen($sessid) != 32) {
+			return NULL;
+		}
+		$sid = $sessid;
+		$dbtable = EasyContactFormsDB::wptn('#wp__easycontactforms_sessions');
+		$query = 'SELECT value FROM ' . $dbtable . ' WHERE sid =\'' .$sid . '\'';
+		$value = EasyContactFormsDB::getValue($query);
+		$xml = simplexml_load_string($value);
 		return (string) $xml->$key;
 
 	}
@@ -482,31 +485,36 @@ class EasyContactFormsSecurityManager {
 	 */
 	function setSessionValue($key, $value, $sid = NULL) {
 
-		$newsid = FALSE;
-		if (is_null($sid)) {
-			$newsid = TRUE;
-			$sid = EasyContactFormsSecurityManager::getSid();
-		}
-		else if (is_array($sid) && isset($sid['sid'])) {
-			$sid = $sid['sid'];
-		}
-		else {
-			return NULL;
-		}
-		$dirname = EasyContactFormsSecurityManager::getSessionDir();
-		$filename = md5($sid . EasyContactFormsSecurityManager::getServerPwd());
-		$filename = $dirname . DIRECTORY_SEPARATOR . $filename;
-		if (newsid) {
-			$xml = simplexml_load_string('<data/>');
-		}
-		else if (is_file($filename)) {
-			$xml = simplexml_load_file($filename);
+		if (is_array($sid) && isset($sid['sid'])) {
+			$sessid = mysql_real_escape_string($sid['sid']);
+			if ($sessid != $sid['sid']) {
+				return NULL;
+			}
+			if (strlen($sessid) != 32) {
+				return NULL;
+			}
+			$sid = $sessid;
 		}
 		else {
 			return NULL;
 		}
+		$dbtable = EasyContactFormsDB::wptn('#wp__easycontactforms_sessions');
+		$query = "SELECT id, value FROM {$dbtable} WHERE sid=%s";
+		global $wpdb;
+		$query = $wpdb->prepare($query, $sid);
+		$row = EasyContactFormsDB::getObjects($query);
+		if (count($row) == 0) {
+			return NULL;
+		}
+		$row = $row[0];
+		$rid = $row->id;
+		$xml = simplexml_load_string($row->value);
 		$xml->$key = $value;
-		$xml->asXML($filename);
+		$svalue = $xml->asXML();
+		$query = "UPDATE {$dbtable} SET value=%s  WHERE id=%d";
+		global $wpdb;
+		$query = $wpdb->prepare($query, $svalue, $rid);
+		EasyContactFormsDB::query($query);
 		return $sid;
 
 	}
@@ -520,71 +528,19 @@ class EasyContactFormsSecurityManager {
 	 */
 	function getSid() {
 
-		$pwd = EasyContactFormsSecurityManager::getServerPwd();
-		$dirname = EasyContactFormsSecurityManager::getSessionDir();
-		$flag = $dirname . DIRECTORY_SEPARATOR . 'index.html';
-		if (!is_file($flag)) {
-			$handle = fopen($flag, 'w');
-			fwrite($handle, '<body></body>');
-			fclose($handle);
-		}
-		$fhandle = fopen($flag, 'r');
-		flock($fhandle, LOCK_EX);
-		$filename = md5('counter' . $pwd);
-		$filename = $dirname . DIRECTORY_SEPARATOR . $filename;
-		if (!is_file($filename)) {
-			$counter = rand(1, 10000000);
-		}
-		else {
-			$handle = fopen($filename, 'r');
-			$counter = fread($handle, filesize($filename));
-			$counter = intval($counter);
-			fclose($handle);
-		}
-		$counter++;
-		$handle = fopen($filename, 'w');
-		fwrite($handle, $counter);
-		fclose($handle);
-		fclose($fhandle);
-
-		// hours * minutes * seconds
-		$sesslifetime = 6 * 60 * 60;
 		if (rand(1, 10) == 9) {
-			$exceptions = array();
-			$exceptions[] = 'index.html';
-			$exceptions[] = $filename;
-			$handle = opendir($dirname);
-			while (FALSE !== ($file = readdir($handle))) {
-				if ($file == '.' || $file == '..' || in_array($file, $exceptions)) {
-					continue;
-				}
-				$filemtime = filemtime($dirname . DIRECTORY_SEPARATOR . $file);
-				if (time() - $filemtime < $sesslifetime) {
-					continue;
-				}
-				unlink($dirname . DIRECTORY_SEPARATOR . $file);
-			}
-			closedir($handle);
+			$nDaysAgo = 3;
+
+			$query = "DELETE FROM `#wp__easycontactforms_sessions` WHERE opentime < '" . date("Y-m-d H:i:s", time()-24*60*60*$nDaysAgo) . "'";
+
+			EasyContactFormsDB::query($query);
 		}
-		return md5($counter . $pwd);
-
-	}
-
-	/**
-	 * 	getSessionDir
-	 *
-	 *
-	 * @return
-	 * 
-	 */
-	function getSessionDir() {
-
-		$dirname = md5('sessions' . EasyContactFormsSecurityManager::getServerPwd());
-		$dirname = EASYCONTACTFORMS__SESSION_DIR . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . $dirname;
-		if (!is_dir($dirname)) {
-			EasyContactFormsUtils::createFolder($dirname);
-		}
-		return $dirname;
+		$pwd = EasyContactFormsSecurityManager::getServerPwd();
+		$maxid = EasyContactFormsDB::getValue('SELECT MAX(id) FROM #wp__easycontactforms_sessions');
+		$sid = md5(($maxid + 10) . $pwd);
+		$query = 'INSERT INTO #wp__easycontactforms_sessions(sid, value) VALUES (\'' . $sid . '\', \'<data />\')';
+		EasyContactFormsDB::query($query);
+		return $sid;
 
 	}
 

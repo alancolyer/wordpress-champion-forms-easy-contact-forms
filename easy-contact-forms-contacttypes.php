@@ -6,13 +6,12 @@
  * 	EasyContactFormsContactTypes class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 require_once 'easy-contact-forms-baseclass.php';
@@ -45,7 +44,8 @@ class EasyContactFormsContactTypes extends EasyContactFormsBase {
 	/**
 	 * 	getDeleteStatements
 	 *
-	 * 	prepares delete statements to be executed to delete a  record
+	 * 	prepares delete statements to be executed to delete a contacttype
+	 * 	record
 	 *
 	 * @param int $id
 	 * 	object id
@@ -55,7 +55,7 @@ class EasyContactFormsContactTypes extends EasyContactFormsBase {
 	 */
 	function getDeleteStatements($id) {
 
-		$stmts[] = "DELETE FROM #wp__easycontactforms_contacttypes WHERE id=$id;";
+		$stmts[] = "DELETE FROM #wp__easycontactforms_contacttypes WHERE id='$id';";
 
 		return $stmts;
 
@@ -124,7 +124,7 @@ class EasyContactFormsContactTypes extends EasyContactFormsBase {
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='ContactTypes'><?php
 
-		require_once 'views/easy-contact-forms-contacttypesmainview.php';
+		include 'views/easy-contact-forms-contacttypesmainview.php';
 
 	}
 

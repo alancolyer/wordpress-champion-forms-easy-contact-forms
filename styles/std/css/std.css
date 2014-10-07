@@ -19,8 +19,8 @@ td{border: 0;padding: 0;margin: 0;;vertical-align:middle}
 
 #divEasyContactForms select, #divEasyContactForms textarea, #divEasyContactForms input{background:#fff url(../images/backgrounds.png) 0 -168px repeat-x}
 #divEasyContactForms select, #divEasyContactForms input{height:20px !important;padding:2px !important; font-size:12px !important}
-#divEasyContactForms label{width: 100px;display:block;clear:right;color:#5d5d62;margin:8px 0 3px 0;white-space:nowrap;font-size:1.1em !important;}
-#divEasyContactForms legend{color: #555; font-weight:bold; white-space: nowrap;font-size:1em !important;text-align:middle;}
+#divEasyContactForms label{width: 100px;display:block;clear:right;color:#444;margin:8px 0 3px 0;white-space:nowrap;font-size:1.1em !important;}
+#divEasyContactForms legend{color: #555; font-weight:bold !important; white-space: nowrap;font-size:1em !important;text-align:middle;}
 #divEasyContactForms table{margin:0;padding: 0;border-collapse: collapse;}
 #divEasyContactForms tr{padding: 0}
 #divEasyContactForms input, 
@@ -50,8 +50,11 @@ div.calendar{
   border:1px solid transparent;
 }
 
+#divEasyContactForms .icon_reset_dis{background-image: url(../images/reset_dis.png) !important}
+#divEasyContactForms .icon_button_close_dis{background-image: url(../images/cross_16_dis.png) !important}
 
-.inputselect, .textinput, .datebox, .ufo-select, .mceLayout, .ufo-y-overflow, .ufo-asinput, div.ufo-input-wrapper{border: 1px solid #bbb}
+
+.inputselect, .textinput, .datebox, .ufo-select, .mceLayout, .ufo-y-overflow, .ufo-asinput, div.ufo-input-wrapper{border: 1px solid #dfdfdf}
 .inputselect, .textinput, .datebox, .ufo-select, .ufo-asinput, div.ufo-input-wrapper{margin-bottom:2px;}
 
 
@@ -60,6 +63,8 @@ div.calendar{
 
 .notificationMessage{color: #008800;}
 
+.ufo-message-notification{padding:8px 16px;background:#f7df63;border-radius:8px;border:1px solid #444;}
+.ufo-message-error{padding:8px 16px;background:#f6a78d;border-radius:8px;border:1px solid #444;}
 /*  labels and strings  */
 
 label.ufo-label-top{clear: right;}
@@ -82,17 +87,18 @@ label.ufo-label-top{clear: right;}
 textarea.textinput{font-size: 12px;padding: 3px;}
 
 /*  buttons  */
-span.button{
+#divEasyContactForms span.button{
   border-radius: 4px;
   background1: #3b97cd;
   background: #eee url(../images/backgrounds.png) 0 -87px repeat-x;
   border: 1px solid #bbb;
   line-height: 24px;
+  height: 28px;
   padding: 0px;
   float: left;
   margin: 5px 1px
 }
-span.button span{
+#divEasyContactForms span.button span{
   height: 22px;
   padding: 0 8px;
   display: block;
@@ -589,10 +595,9 @@ ul.ufo-kb-readonly>li:hover{background:#fcfcfc}
 	color:#800;
 }
 
-/* custom forms */
 
 .ufo-filter>div>div>div{width: 315px;}
-div.ufo-customforms div.ufo-filter label {width:120px !important}
+div.ufo-customforms div.ufo-filter label {width:120px}
 
 textarea.ufo-style-sheet-text {
 	padding:10px;
@@ -601,6 +606,7 @@ textarea.ufo-style-sheet-text {
 	background:url(none) !important;
 }
 
+/* custom forms */
 div.ufo-customform-designer-div {
 	background:#fbfbff;
 	padding:1px !important;
@@ -625,6 +631,13 @@ div.ufo-customform-fieldform-fieldset{
 	position:relative;
 	border-radius:3px;
 }
+
+div.ufo-customform-fieldform-fieldset .inputselect, 
+div.ufo-customform-fieldform-fieldset .textinput, 
+div.ufo-customform-fieldform-fieldset .ufo-select 
+{border: 1px solid #bbb}
+
+div.ufo-customform-fieldform-fieldset label {text-shadow: #fff 1px 1px} 
 
 div.ufo-customform-fieldform-fieldset div.ufo-customform-fieldform-fieldset{
 	margin:0;
@@ -915,3 +928,63 @@ li.ufo-customform-fieldtype-li.ufo-customform-fieldtype-disabled {
   opacity: .20;
   filter: alpha(opacity=20);
 }
+div.ufo-add-pad {
+	padding:5px;
+	line-height:1.2em;
+}
+
+a.ufo-add-pad {
+	padding-right:5px;
+}
+
+ div.ufo-customform-settings-savebutton-div {
+ 	padding-left:10px;
+ 	padding-bottom:5px;
+ }
+/***************** dashboard **************************************************/
+table.ufo-userstatistics tr td {padding: 10px; border:1px solid #ccc;background:#fafafa;}
+.ufo-dashboard-header {font-size:1.1em;padding:5px;display:block;}
+table.ufo-formstatistics tr td {padding: 10px;;background:#fff;}
+.ufo-dashboard .ufo-tab-wrapper{height:143px;}
+.ufo-dashboard .ufo-tab{padding:15px 25px;}
+
+/***************** hints **************************************************/
+span.ufo-label-hint{
+	display:inline-block;
+	height:9px;
+	font-size:9px;
+	font-weight:normal;
+	color:#888;
+}
+span.ufo-label-hint a{
+	color:22f;
+}
+span.ufo-label-hint:hover a{
+	text-decoration:underline;
+}
+span.ufo-settingsform-label-hint {
+	margin-left:5px;
+}
+
+div.ufo-as-hint{
+	padding:5px 10px;
+	padding-left:35px;
+	border-radius:6px;
+	font-size:13px;
+
+  	display: none;
+	background: #fdfdfd url(../images/response.png) 10px center no-repeat;
+  	border: 1px solid #777;
+  	color: #003;
+  	text-shadow: #fff 1px 1px;
+  
+  	position: absolute;
+	z-index: 100;
+  	margin: 0 3px;
+}
+
+div.ufo-div-comment{font-size:12px;border-radius:10px;background:#f8f8f8;overflow:hidden;margin:10px;border:1px solid #ccc;padding-right:10px;}
+div.ufo-div-comment-header{background:#eee;padding:10px;;float:left;margin: 0 10px 0 0;border-radius:0 0 6px 0;}
+div.ufo-div-comment-comment{padding:10px;}
+
+div.cf-logo{background: transparent url(../images/cflogo.png) 10px 10px no-repeat;}

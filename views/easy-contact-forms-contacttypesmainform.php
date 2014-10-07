@@ -7,13 +7,12 @@
  * 	@see EasyContactFormsContactTypes::getMainForm()
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 
@@ -24,12 +23,12 @@ EasyContactFormsLayout::getFormHeader2Body();
 ?>
   <div>
     <div>
-      <label>
+      <label for='Description'>
         <?php echo EasyContactFormsT::get('Description');?>
         <span class='mandatoryast'>*</span>
       </label>
-      <input type='text' id='Description' value='<?php echo $obj->get('Description');?>' class='textinput ufo-text ufo-formvalue' style='width:100%'>
-      <input type='hidden' value='var c = {};c.id = "Description";c.events = {};c.events.blur = [];c.minmax={};c.minmax.msg=AppMan.resources.ValueLengthShouldBeLessThan;c.minmax.args=[];c.minmax.args.push("200");c.max="200";c.events.blur.push("minmax");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.invClass = "ufo-fields-invalid-field";AppMan.addValidation(c);' class='ufo-eval'>
+      <input type='text' id='Description' value='<?php echo $obj->get('Description');?>' class='textinput ufo-text ufo-formvalue' style='width:100%'/>
+      <input type='hidden' value='var c = {};c.id = "Description";c.events = {};c.events.blur = [];c.minmax={};c.minmax.msg=AppMan.resources.ValueLengthShouldBeLessThan;c.minmax.args=[];c.minmax.args.push("200");c.max="200";c.events.blur.push("minmax");c.required={};c.required.msg=AppMan.resources.ThisFieldIsRequired;c.events.blur.push("required");c.InvalidCSSClass = "ufo-fields-invalid-field";AppMan.addValidation(c);' class='ufo-eval'/>
       <div id='Description-invalid' class='ufo-fields-invalid-value ufo-id-link' style='position:absolute;display:none'></div>
     </div>
     <div>
@@ -51,7 +50,7 @@ EasyContactFormsLayout::getFormHeader2Body();
           'bclass' => "button internalimage",
         )
       );?>
-      <input type='hidden' value='var c = {};c.id = "OK";AppMan.addSubmit(c);' class='ufo-eval'>
+      <input type='hidden' value='var c = {};c.id = "OK";AppMan.addSubmit(c);' class='ufo-eval'/>
     </div>
     <div class='ufo-float-left'>
       <?php echo EasyContactFormsIHTML::getButton(
@@ -63,7 +62,7 @@ EasyContactFormsLayout::getFormHeader2Body();
           'bclass' => "button internalimage",
         )
       );?>
-      <input type='hidden' value='var c = {};c.id = "Apply";AppMan.addSubmit(c);' class='ufo-eval'>
+      <input type='hidden' value='var c = {};c.id = "Apply";AppMan.addSubmit(c);' class='ufo-eval'/>
     </div>
     <div class='ufo-float-left'>
       <?php echo EasyContactFormsIHTML::getButton(

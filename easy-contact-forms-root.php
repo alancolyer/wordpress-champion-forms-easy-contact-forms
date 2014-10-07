@@ -6,13 +6,12 @@
  * 	EasyContactFormsRoot class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 require_once 'easy-contact-forms-utils.php';
@@ -53,6 +52,7 @@ class EasyContactFormsRoot {
 	 */
 	function processEvent($_mainmap) {
 
+
 		$_dispmethod = $_mainmap["m"];
 
 		if ($_dispmethod == "save") {
@@ -83,6 +83,10 @@ class EasyContactFormsRoot {
 			return EasyContactFormsRoot::deleteFile($_mainmap);
 		}
 
+		if ($_dispmethod == "api") {
+			return EasyContactFormsRoot::ajaxApi($_mainmap);
+		}
+
 		$newobjtype = $_mainmap["t"];
 
 		$newobject = EasyContactFormsClassLoader::getObject($newobjtype);
@@ -92,6 +96,58 @@ class EasyContactFormsRoot {
 		else {
 			EasyContactFormsIHTML::getNotLoggedInHTML();
 		}
+
+	}
+
+	/**
+	 * 	download
+	 *
+	 * 	loads the file handler and transfers the download request
+	 *
+	 * @param array $map
+	 * 	request data
+	 */
+	function download($map) {
+
+		$file = EasyContactFormsClassLoader::getObject('Files');
+		$file->download($map);
+
+	}
+
+	/**
+	 * 	upload
+	 *
+	 * 	loads the file handler and passes the request to hadle the uploaded
+	 * 	file
+	 *
+	 * @param array $_uldmap
+	 * 	request data
+	 */
+	function upload($_uldmap) {
+
+		if (! EasyContactFormsSecurityManager::roleObjectCheck($_uldmap)) {
+			return;
+		}
+		$file = EasyContactFormsClassLoader::getObject('Files');
+		$file->upload($_uldmap);
+
+	}
+
+	/**
+	 * 	deleteFile
+	 *
+	 * 	loads the file handler and passes the request to delete a file
+	 *
+	 * @param array $_delmap
+	 * 	request data
+	 */
+	function deleteFile($_delmap) {
+
+		if (! EasyContactFormsSecurityManager::roleObjectCheck($_delmap)) {
+			return;
+		}
+		$file = EasyContactFormsClassLoader::getObject('Files');
+		$file->deletedocfile($_delmap);
 
 	}
 
@@ -208,11 +264,11 @@ class EasyContactFormsRoot {
 	 */
 	function listObjects($_ismap) {
 
+		$obj = EasyContactFormsClassLoader::getObject($_ismap['t']);
 		if (! EasyContactFormsSecurityManager::roleObjectCheck($_ismap)) {
 			return '{}';
 		}
 
-		$obj = EasyContactFormsClassLoader::getObject($_ismap['t']);
 		$t_name = $obj->getTableName();
 		$fields = $obj->getFieldNames();
 		$mastervalue = intval($_ismap['oid']);
@@ -409,6 +465,98 @@ class EasyContactFormsRoot {
 
 	}
 
+	/**
+	 * 	ajaxApi
+	 *
+	 * 	handles ajax-based api requests
+	 *
+	 * @param array $_acmap
+	 * 	request data
+	 *
+	 * @return string
+	 * 	arbitrary data in response to requests
+	 */
+	function ajaxApi($_acmap) {
+
+		if (!isset($_acmap['m2'])) {
+			return;
+		}
+		$args = (object) array();
+		if (isset($_acmap['a'])) {
+			$args = json_decode(stripslashes($_acmap['a']));
+		}
+
+		$silent = !isset($args->showErrors);
+		unset($args->showErrors);
+
+		echo EasyContactFormsRoot::api($_acmap['m2'], $args, FALSE, $silent);
+
+	}
+
+	/**
+	 * 	api
+	 *
+	 * 	Performs a remote api call
+	 *
+	 * @param string $action
+	 * 	Remote method to call
+	 * @param array $args
+	 * 	Arguments to pass
+	 * @param boolean $unserialize
+	 * 	Unserialization flag
+	 * @param  $silent
+	 * 
+	 *
+	 * @return arbitrary
+	 * 	Depends on the api call type
+	 */
+	function api($action, $args, $unserialize = TRUE, $silent = FALSE) {
+
+		require_once 'easy-contact-forms-applicationsettings.php';
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		global $wp_version;
+		if (is_array($args)) {
+			$args['slug'] = 'easy-contact-forms';
+			$args['productVersion'] = $as->get('ProductVersion');
+		}
+		if (is_object($args)) {
+			$args->slug = 'easy-contact-forms';
+			$args->productVersion = $as->get('ProductVersion');
+		}
+		$body = array();
+		$body['apiaction'] = $action;
+		$body['request'] = serialize($args);
+		$body['site'] = get_bloginfo('url');
+
+		$request = array(
+			'body' => $body,
+			'user-agent' => 'WordPress/' . $wp_version . '; ' . get_bloginfo('url')
+		);
+		$raw_response = wp_remote_post('http://championforms.com/api.php', $request);
+		if (is_wp_error($raw_response) || ($raw_response['response']['code'] != 200)) {
+			if ($silent) {
+				return '';
+			}
+			$msg = "Remote API Action '{$action}' Failed";
+			$as->addMessage($msg);
+			return new WP_Error('remote_api_failed', $msg);
+		}
+		$response = $raw_response['body'];
+		if ($unserialize) {
+			$response = unserialize($response);
+			if ($response === FALSE) {
+				if ($silent) {
+					return '';
+				}
+				$msg = "Could not read Remote API Action '{$action}' Response";
+				$as->addMessage($msg);
+				return new WP_Error('remote_api_failed', $msg);
+			}
+		}
+		return $response;
+
+	}
+
 }
 
 /**
@@ -444,11 +592,11 @@ class EasyContactFormsClassLoader {
 				$inst = new $classname($data, $new_id);
 				$valid =	$inst->isValid();
 				if ($data && !empty($new_id) && !$valid) {
-					return null;
+					return NULL;
 				}
 				return $inst;
 			} catch (Exception $e) {
-				return null;
+				return NULL;
 			}
 		}
 		else {

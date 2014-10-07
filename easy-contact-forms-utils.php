@@ -6,13 +6,12 @@
  * 	EasyContactFormsUtils class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -299,7 +298,7 @@ class EasyContactFormsUtils {
 		switch ($datatype) {
 
 			case 'boolean':
-				return ($value == 'on' || $value == '1') ? 1 : 0;
+				return ('' . $value == 'on' || '' . $value == '1') ? 1 : 0;
 
 			case 'float':
 				return ((1 + $value) - 1);
@@ -313,6 +312,7 @@ class EasyContactFormsUtils {
 					$dvalue = strtotime($value);
 					return $dvalue;
 				}
+
 		}
 		return $value;
 
@@ -349,7 +349,7 @@ class EasyContactFormsUtils {
 	 */
 	function parseRequest($request, $field, $datatype) {
 
-		if (! isset($request->$field)) {
+		if (!isset($request->$field)) {
 			return $request;
 		}
 		$request->$field = EasyContactFormsUtils::convert($request->$field, $datatype);
@@ -378,9 +378,9 @@ class EasyContactFormsUtils {
 
 		$empty = 0;
 
-		$format = ( $datetime ) ? EasyContactFormsT::get('DateTimeFormat') : EasyContactFormsT::get('DateFormat');
+		$format = EasyContactFormsApplicationSettings::getInstance()->getDateFormat('PHP', $datetime);
 
-		if (( $date == $empty ) || ( !isset($date) )) {
+		if ((!isset($date)) || ($date == 0) || ($date == '')) {
 			$datestr = $setcurrent ? date($format) : '';
 		}
 		else {
@@ -466,8 +466,9 @@ class EasyContactFormsUtils {
 			$js = "[$js]";
 		}
 		elseif (is_string($var)) {
-			$var = str_replace(array('"', "\n", "\r"), array('\\"', '\\n'), stripslashes($var));
-			$js = $recursed ? "\"$var\"" : "(new String(\"$var\"))";
+			$dq = chr(34);
+			$var = str_replace(array(chr(34), chr(10), chr(13)), array(chr(92) . $dq, chr(92) . chr(10)), stripslashes($var));
+			$js = $recursed ? $dq . $var . $dq : "(new String({$dq}{$var}{$dq}))";
 
 		}
 		elseif (is_bool($var)) {
@@ -603,19 +604,27 @@ class EasyContactFormsUtils {
 		$ds = DIRECTORY_SEPARATOR;
 		$dirs = explode($ds, $targdir);
 		$path = '';
+		$as = EasyContactFormsApplicationSettings::getInstance();
 		foreach ($dirs as $subdir) {
 			$path .= $subdir . '/';
 			if (!is_dir($path)) {
-				if (!mkdir($path)) {
-					echo EasyContactFormsT::get('ImpossibleToPerformOperation');
+				if (!@mkdir($path)) {
+					if (class_exists('EasyContactFormsT')) {
+						$as->addMessage(EasyContactFormsT::get('CannotCreateFolder') . ' ' . $path, 'ufo-message-error');
+					}
 					return FALSE;
 				}
-				if (!$handle = fopen($path . 'index.html', 'w')) {
-					echo 'Cannot open file (' . $path . 'index.html)';
+				if (!$handle = @fopen($path . 'index.html', 'w')) {
+					if (class_exists('EasyContactFormsT')) {
+						$as->addMessage(EasyContactFormsT::get('CannotWriteToFile') . ' ' . $path . 'index.html', 'ufo-message-error');
+					}
 					return FALSE;
 				}
-				if (fwrite($handle, '<body></body>') === FALSE) {
-					echo 'Cannot write to file (' . $path . 'index.html)';
+				if (@fwrite($handle, '<body></body>') === FALSE) {
+					fclose($handle);
+					if (class_exists('EasyContactFormsT')) {
+						$as->addMessage(EasyContactFormsT::get('CannotWriteToFile') . ' ' . $path . 'index.html', 'ufo-message-error');
+					}
 					return FALSE;
 				}
 				fclose($handle);
@@ -667,7 +676,9 @@ class EasyContactFormsUtils {
 			$objects = scandir($dir);
 			foreach ($objects as $object) {
 				if ($object != '.' && $object != '..') {
-					if (filetype($dir . '/' . $object) == 'dir') rrmdir($dir . '/' . $object); else unlink($dir . '/' . $object);
+
+					if (filetype($dir . '/' . $object) == 'dir') EasyContactFormsUtils::rrmdir($dir . '/' . $object); else unlink($dir . '/' . $object);
+
 				}
 			}
 			reset($objects);
@@ -725,6 +736,70 @@ class EasyContactFormsUtils {
 
 	}
 
+	/**
+	 * 	getSimpleObjectTable
+	 *
+	 * 	Produces a simple html table based on a given object
+	 *
+	 * @param object $obj
+	 * 	the object to produce the table from
+	 *
+	 * @return string
+	 * 	the html table
+	 */
+	function getSimpleObjectTable($obj) {
+
+		$obj = (array) $obj;
+
+		$html = '';
+
+		foreach ($obj as $key=>$value) {
+			$value = nl2br(htmlspecialchars($value));
+
+			$html .= "<tr><th style='padding:5px'>{$key}</th><td><div style='padding:5px;max-width:400px;overflow-x:auto;'>{$value}</div></td></tr>";
+
+		}
+		$html = "<table class='ufo-object-table'>{$html}</table>";
+
+		return $html;
+	}
+
+	/**
+	 * 	getSimpleTable
+	 *
+	 * 	produces a simple html table based on object array
+	 *
+	 * @param array $objs
+	 * 	the object array to produce the table from
+	 *
+	 * @return string
+	 * 	html table
+	 */
+	function getSimpleTable($objs) {
+
+		if (sizeof ($objs) == 0)	{
+			return '';
+		}
+
+		$html = '';
+
+		foreach($objs as $obj) {
+			$html .= "<p>";
+
+			$name = isset($obj->Description) ? $obj->Description : null;
+			$name = isset($obj->Name) ? $obj->Name : $name;
+			if (!is_null($name)) {
+				$html .= "<h3>{$name}</h3>";
+			}
+
+			$html .= EasyContactFormsUtils::getSimpleObjectTable($obj);
+			$html .= "</p>";
+		}
+
+			return $html;
+
+	}
+
 }
 
 /**
@@ -750,6 +825,7 @@ class EasyContactFormsSimpleXML extends SimpleXMLElement {
 		$node = dom_import_simplexml($node);
 		$no = $node->ownerDocument;
 		$node->appendChild($no->createCDATASection($cdata));
+		return $node;
 
 	}
 
@@ -768,6 +844,49 @@ class EasyContactFormsSimpleXML extends SimpleXMLElement {
 		$str = str_replace('<?xml version="1.0"?>', '', $str);
 		return $str;
 
+	}
+
+	/**
+	 * 	prepare
+	 *
+	 * 	makes some xml compat conversions
+	 *
+	 * @param  $str
+	 * 
+	 *
+	 * @return string
+	 * 	prepared string
+	 */
+	public function prepare($str) {
+
+		$str = str_replace('&#039;', chr(39), $str);
+		$str = str_replace('&amp;', chr(92) . '\amp;', $str);
+		$str = preg_replace('/&(?!\w{2,6};)/', '&amp;', $str);
+		$str = str_replace(chr(92) . '\amp', '&amp;', $str);
+		return $str;
+
+	}
+
+	/**
+	 * 	copyright fedek6-at-gmail-dot-com
+	 *
+	 * @param  &$base
+	 * 
+	 * @param  $add
+	 * 
+	 *
+	 * @return
+	 * 
+	 */
+	function mergeXML(&$base, $add) {
+
+		$new = $base->addChild($add->getName(), $add[0]);
+		foreach ($add->attributes() as $a => $b) {
+			$new[$a] = $b;
+		}
+		foreach ($add->children() as $child) {
+			EasyContactFormsSimpleXML::mergeXML($new, $child);
+		}
 	}
 
 }

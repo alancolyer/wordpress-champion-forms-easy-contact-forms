@@ -6,13 +6,12 @@
  * 	EasyContactFormsUsers class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 require_once 'easy-contact-forms-baseclass.php';
@@ -21,7 +20,7 @@ require_once 'easy-contact-forms-baseclass.php';
  * 	EasyContactFormsUsers
  *
  */
-class EasyContactFormsUsers extends EasyContactFormsBase {
+class EasyContactFormsUsers extends EasyContactFormsBusinessObject {
 
 	/**
 	 * 	EasyContactFormsUsers class constructor
@@ -61,32 +60,12 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 				'Zip' => '',
 				'Comment' => '',
 				'History' => '',
+				'Options' => '',
 			);
 
 		if ($objdata) {
 			$this->init($new_id);
 		}
-
-	}
-
-	/**
-	 * 	getDeleteStatements
-	 *
-	 * 	prepares delete statements to be executed to delete a user record
-	 *
-	 * @param int $id
-	 * 	object id
-	 *
-	 * @return array
-	 * 	the array of statements
-	 */
-	function getDeleteStatements($id) {
-
-		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms_mailinglists WHERE Contacts=$id;";
-
-		$stmts[] = "DELETE FROM #wp__easycontactforms_users WHERE id=$id;";
-
-		return $stmts;
 
 	}
 
@@ -110,6 +89,49 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 		$fields->Role = 4;
 
 		return parent::getEmptyObject($map, $fields);
+
+	}
+
+	/**
+	 * 	getDeleteStatements
+	 *
+	 * 	prepares delete statements to be executed to delete a user object
+	 * 	record
+	 *
+	 * @param int $id
+	 * 	object id
+	 *
+	 * @return array
+	 * 	the array of statements
+	 */
+	function getDeleteStatements($id) {
+
+		$query = "SELECT
+				Users.Role,
+				Users.CMSId
+			FROM
+				#wp__easycontactforms_users AS Users
+			WHERE
+				Users.id='$id'";
+
+		$objs = EasyContactFormsDB::getObjects($query);
+		if (count($objs) == 0) {
+			return array();
+		}
+		$usr = $objs[0];
+		if ($usr->Role == 1) {
+			$as = EasyContactFormsApplicationSettings::getInstance();
+			$as->addMessage(EasyContactFormsT::get('CannotDeleteSuperAdmin'));
+			return array();
+		}
+
+		$stmts = array();
+
+		$stmts[] = "DELETE FROM #wp__easycontactforms_customforms_mailinglists WHERE Contacts='$id';";
+
+		$stmts[] = "DELETE FROM #wp__easycontactforms_users WHERE id='$id';";
+
+		return $stmts;
 
 	}
 
@@ -168,10 +190,14 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 	function getUserASList($_asmap) {
 
 		$plainselect = "SELECT
-				CONCAT(Users.Description,' ', Users.Name) AS Description,
-				Users.id
-			FROM
-				#wp__easycontactforms_users AS Users";
+						Users.id,
+						Users.Description
+					FROM(
+						SELECT
+							CONCAT(Users1.Description,' ', Users1.Name) AS Description,
+							Users1.id
+						FROM
+							#wp__easycontactforms_users AS Users1) AS Users";
 
 		$values = array();
 		$_result = array();
@@ -189,7 +215,7 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 			$values['fvalues'][':input'] = "%$asinput->input%";
 			$_limit	= $asinput->limit;
 
-			$_query = "$plainselect WHERE CONCAT (Users.Description,' ',Users.Name) LIKE :input $_limit";
+			$_query = "$plainselect WHERE Users.Description LIKE :input $_limit";
 		}
 
 		$_aslist = EasyContactFormsDB::select($_query, $values);
@@ -217,14 +243,31 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 	 */
 	function update($request, $id) {
 
+		$query = "SELECT
+				Users.Role,
+				Users.CMSId
+			FROM
+				#wp__easycontactforms_users AS Users
+			WHERE
+				Users.id='$id'";
+
+		$objs = EasyContactFormsDB::getObjects($query);
+		$usr = $objs[0];
+		global $current_user;
+		$currentadmin = $usr->Role == 1 &&
+				isset($request->Role) &&
+				isset($current_user) &&
+				$current_user->ID == $usr->CMSId;
+		if ($currentadmin) {
+			$as = EasyContactFormsApplicationSettings::getInstance();
+			$as->addMessage(EasyContactFormsT::get('CannotChangeCurrentUserRole'));
+			$request->Role = 1;
+		}
+
 		$request = EasyContactFormsUtils::parseRequest($request, 'ContactType', 'int');
 		$request = EasyContactFormsUtils::parseRequest($request, 'Birthday', 'date');
 		$request = EasyContactFormsUtils::parseRequest($request, 'Role', 'int');
 		$request = EasyContactFormsUtils::parseRequest($request, 'CMSId', 'int');
-
-		require_once 'easy-contact-forms-backoffice.php';
-		$bo = new EasyContactFormsBackOffice();
-		$request = $bo->processHistory($request, $this->type, $id, $this->user->id);
 
 		parent::update($request, $id);
 
@@ -297,12 +340,12 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 		$query = "SELECT
 				Users.id,
 				Users.Name,
-				Users.Description,
 				Users.Notes,
 				Users.email,
 				Users.Cell,
 				Users.Phone1,
 				Users.ContactField3,
+				Users.Description,
 				ContactTypes.Description AS ContactTypeDescription
 			FROM
 				#wp__easycontactforms_users AS Users
@@ -457,8 +500,7 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 				Users.email,
 				ContactTypes.Description AS ContactTypeDescription,
 				Users.ContactType AS ContactType,
-				Roles.Description AS RoleDescription,
-				Users.Role AS Role
+				Roles.Description AS RoleDescription
 			FROM
 				#wp__easycontactforms_users AS Users
 			LEFT JOIN
@@ -487,7 +529,7 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='Users'><?php
 
-		require_once 'views/easy-contact-forms-usersmainview.php';
+		include 'views/easy-contact-forms-usersmainview.php';
 
 	}
 
@@ -508,10 +550,9 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 		$viewfilters = array();
 		$viewfilters = EasyContactFormsDB::getMTMFilter($viewmap, $viewfilters, 'Users');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'Users.', 'id', 'int');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'Users.', 'Name');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'Users.', 'Description');
+		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'Users.', 'Name');
 		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'Users.', 'ContactType', 'int');
-		$viewfilters = EasyContactFormsDB::getSignFilter($viewfilters, $rparams, 'Users.', 'Role', 'int');
 
 		$query = "SELECT
 				Users.id,
@@ -530,7 +571,7 @@ class EasyContactFormsUsers extends EasyContactFormsBase {
 		$obj = $this;
 		?><input type='hidden' name='t' id='t' value='Users'><?php
 
-		require_once 'views/easy-contact-forms-usersmanagemainview.php';
+		include 'views/easy-contact-forms-usersmanagemainview.php';
 
 	}
 

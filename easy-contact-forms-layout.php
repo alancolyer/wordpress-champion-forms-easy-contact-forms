@@ -6,13 +6,12 @@
  * 	EasyContactFormsLayout class definition
  */
 
-/*  Copyright Georgiy Vasylyev, 2008-2012 | http://wp-pal.com  
+/*  Copyright championforms.com, 2012-2013 | http://championforms.com  
  * -----------------------------------------------------------
  * Easy Contact Forms
  *
  * This product is distributed under terms of the GNU General Public License. http://www.gnu.org/licenses/gpl-2.0.txt.
  * 
- * Please read the entire license text in the license.txt file
  */
 
 /**
@@ -34,6 +33,8 @@ class EasyContactFormsLayout {
 	 */
 	function getFormHeader($class) {
 
+		$as = EasyContactFormsApplicationSettings::getInstance();
+		$as->showMessages();
 		?>
 			<div class = 'ufoccontpage ufo-split <?php echo $class;?>'>
 				<div class = 'ufosp_header'>
