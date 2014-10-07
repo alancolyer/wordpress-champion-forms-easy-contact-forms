@@ -1,0 +1,99 @@
+span {display:inline-block;padding:0;margin:0}
+span.ufo-cell-left label, span.ufo-cell-center label, span.ufo-cell-right label, span.ufo-cell-center label
+{display:block;margin:2px 5px; margin-left:0}
+
+span.ufo-cell-right {width:200px;padding-left:3px;}
+
+span.ufo-cell-left{width:130px;}
+span.ufo-cell-center{width:230px}
+
+span.ufo-cell-center input, 
+span.ufo-cell-center select 
+{width:100%}
+
+.ufo-field-default-value {
+	color:grey
+}
+
+div.ufo-customform-row * {
+	vertical-align:top
+}
+
+.ufo-customfields-field-description {
+	font-size:0.9em;
+	color:grey;
+}
+
+.ufo-customfields-container-description {
+	padding:10px 0;
+}
+
+.ufo-customfields-required-suffix {
+	color:#777;
+}
+
+button.ufo-customfields-refresh-button {
+	width:16px;
+	height:16px;
+	margin:5px;
+  	background-repeat: no-repeat  !important;
+  	background-position: center center !important;
+  	background-color:transparent;
+  	border:0;
+  	outline:none;
+}
+
+.ufo-customfields-valid, .ufo-customfields-invalid{
+  z-index:10;
+  font-size:0.7em;
+  background-repeat: no-repeat  !important;
+  background-position: 2px center !important;
+  padding-left:25px;
+  font-family:verdana;
+}
+
+.ufo-customfields-valid {
+  height:20px;
+}
+.ufo-customfields-invalid {
+  border:1px solid #86a9d8;
+  border-radius:3px;
+  padding:7px;
+  padding-left:20px;
+  background-color:#fff;
+  color:#444;
+  z-index:15;
+}
+
+.ufo-customfields-invalidvalue {border-left:4px solid #fc3844;}
+
+.ufo-customfield-description {
+	color:grey;
+	font-size:0.9em;
+	font-family:arial;
+}
+
+.ufo-form-submit-success, .ufo-form-submit-failure {
+	margin-left:25%;
+	margin-right:25%;
+	margin-top:60px;
+	margin-bottom:60px;
+	padding:20px 40px;	
+	border-radius:10px;
+	background-repeat: no-repeat  !important;
+	background-position: 8px center !important;
+	width:200px;
+}
+.ufo-form-submit-failure {
+	background-color:#f1a097;
+}
+.ufo-form-submit-failure strong {
+	color:white;
+	padding-top:15px;
+}
+.ufo-form-submit-success {
+	background-color:#e1f1f8;
+}
+div.ufo-radiogroup-row * {
+	vertical-align:middle;
+}

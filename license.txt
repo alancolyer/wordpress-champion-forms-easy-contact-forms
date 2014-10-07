@@ -1,0 +1,12 @@
+Copyright: Georgiy Vasylyev, 2008-2012 | http://easy-contact-forms.com
+-----------------------------------------------------------
+ 
+Easy Contact Forms
+ 
+For details and latest version and other products, please visit us at http://easy-contact-forms.com;
+
+This product is distributed under terms of the GNU General Public License (http://www.gnu.org/licenses/gpl-2.0.txt).
+ 
+Please contact us at support@formsofcontact.com if you encounter any issues. 
+ 
+Thank you for using Easy Contact Forms.
